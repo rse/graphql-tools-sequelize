@@ -2,6 +2,8 @@
 GraphQL-Tools-Sequelize
 ========================
 
+[HERE BE DRAGONS -- STILL WORK IN PROGRESS]
+
 Resolver Functions for GraphQL-Tools using Sequelize ORM
 
 <p/>
