@@ -27,7 +27,6 @@ import capitalize        from "capitalize"
 import co                from "co"
 import Ducky             from "ducky"
 import Promise           from "bluebird"
-import * as GraphQL      from "graphql"
 import GraphQLFields     from "graphql-fields"
 
 export default class GraphQLToolsSequelize {
@@ -69,7 +68,10 @@ export default class GraphQLToolsSequelize {
             { graphql: "String",  javascript: "string",  sequelize: "STRING" },
             { graphql: "ID",      javascript: "string",  sequelize: "STRING" }
         ]
-        return scalarTypeMap.find((item) => item[from] === type)[to]
+        let found = scalarTypeMap.find((item) => item[from] === type)
+        if (found !== undefined)
+            found = found[to]
+        return found
     }
 
     /*  determine fields (and their type) of a GraphQL object type  */
@@ -80,12 +82,12 @@ export default class GraphQLToolsSequelize {
             let type = fieldsAll[field].type
             while (typeof type.ofType === "object")
                 type = type.ofType
-            if (type instanceof GraphQL.GraphQLScalarType)
+            if (type.constructor.name === "GraphQLScalarType")
                 fields.attribute[field] = type.name
-            else if (type instanceof GraphQL.GraphQLObjectType)
+            else if (type.constructor.name === "GraphQLObjectType")
                 fields.relation[field] = type.name
             else
-                throw new Error("unknown type for field: " + field)
+                throw new Error(`unknown type "${type.constructor.name}" for field "${field}"`)
         })
         return fields
     }

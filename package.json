@@ -20,7 +20,6 @@
     "homepage": "https://github.com/rse/graphql-tools-sequelize",
     "bugs":     "https://github.com/rse/graphql-tools-sequelize/issues",
     "dependencies": {
-        "graphql":              "~0.6.2",
         "graphql-fields":       "~1.0.1",
         "bluebird":             "~3.4.1",
         "ducky":                "~2.4.0",
