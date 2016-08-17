@@ -31,18 +31,31 @@ import * as GraphQL      from "graphql"
 import GraphQLFields     from "graphql-fields"
 
 export default class GraphQLToolsSequelize {
-    constructor (sequelize, authorizers) {
-        this.db          = sequelize
-        this.dm          = sequelize.models
+    constructor (sequelize, authorizers = null, tracer = null) {
+        this.sequelize   = sequelize
+        this.models      = sequelize.models
         this.authorizers = authorizers
+        this.tracer      = tracer
     }
 
-    /*   check authorization  */
-    authorized (op, type, instance, ctx) {
+    /*   optionally check authorization  */
+    authorized (op, type, obj, ctx) {
+        if (this.authorizers === null)
+            return Promise.resolve(true)
         if (this.authorizers[type] === undefined)
             return Promise.resolve(true)
-        let result = this.authorizers[type](op, instance, ctx)
+        let result = this.authorizers[type](op, obj, ctx)
         if (typeof result === "boolean")
+            result = Promise.resolve(result)
+        return result
+    }
+
+    /*   optionally give tracer a hint  */
+    trace (oid, type, op, via, onto) {
+        if (this.tracer === null)
+            return Promise.resolve()
+        let result = this.tracer.call(null, oid, type, op, via, onto)
+        if (!(typeof result === "object" && typeof result.then === "function"))
             result = Promise.resolve(result)
         return result
     }
@@ -156,211 +169,288 @@ export default class GraphQLToolsSequelize {
         return opts
     }
 
-    queryEntityOne (entity) {
-        return (parent, args, ctx) => {
-            return this.dm[entity].findById(args.id).then((instance) =>
-                instance !== null ? this.authorized("read", entity, instance, ctx).then((allowed) =>
-                    allowed ? instance : null) : null)
-        }
+    /*  API: direct query single entity by id  */
+    queryEntityOne (type) {
+        return co.wrap(function * (parent, args, ctx) {
+            /*  find entity  */
+            let obj = yield (this.models[type].findById(args.id))
+            if (obj === null)
+                return null
+
+            /*  check authorization  */
+            if (!(yield (this.authorized("read", type, obj, ctx))))
+                return null
+
+            /*  trace access  */
+            yield (this.trace(obj.id, type, "read", "direct", "one"))
+
+            return obj
+        }.bind(this))
     }
 
-    queryEntityAll (entity) {
-        return (parent, args, ctx, info) => {
-            let opts = this.findAllOptions(entity, args, info)
-            return Promise.filter(this.dm[entity].findAll(opts), (instance) =>
-                this.authorized("read", entity, instance, ctx))
-        }
+    /*  API: direct query all entities by where  */
+    queryEntityAll (type) {
+        return co.wrap(function * (parent, args, ctx, info) {
+            /*  find entities  */
+            let opts = this.findAllOptions(type, args, info)
+            let objs = yield(this.models[type].findAll(opts))
+
+            /*  check authorizations  */
+            objs = yield (Promise.filter(objs, (obj) => {
+                return this.authorized("read", type, obj, ctx)
+            }))
+
+            /*  trace access  */
+            yield (Promise.each(objs, (obj) => {
+                return this.trace(obj.id, type, "read", "direct", "all")
+            }))
+
+            return objs
+        }.bind(this))
     }
 
-    queryRelationOne (entity, getter) {
-        return (instance, args, ctx) => {
-            return instance[getter]().then((other) =>
-                this.authorized("read", entity, other, ctx).then((allowed) =>
-                    allowed ? other : null))
-        }
+    /*  API: direct query single entity by 1-ariy relationship  */
+    queryRelationOne (type, getter) {
+        return co.wrap(function * (parent, args, ctx) {
+            /*  find entity  */
+            let obj = yield(parent[getter]())
+            if (obj === null)
+                return null
+
+            /*  check authorization  */
+            if (!(yield (this.authorized("read", type, obj, ctx))))
+                return null
+
+            /*  trace access  */
+            yield (this.trace(obj.id, type, "read", "relation", "all"))
+
+            return obj
+        }.bind(this))
     }
 
-    queryRelationMany (entity, getter) {
-        return (instance, args, ctx) => {
-            return Promise.filter(instance[getter](), (other) =>
-                this.authorized("read", entity, other, ctx))
-        }
+    /*  API: direct query all entities by N-ariy relationship  */
+    queryRelationMany (type, getter) {
+        return co.wrap(function * (parent, args, ctx) {
+            /*  find entities  */
+            let objs = yield (parent[getter]())
+
+            /*  check authorization  */
+            objs = yield (Promise.filter(objs, (obj) => {
+                return this.authorized("read", type, obj, ctx)
+            }))
+
+            /*  trace access  */
+            yield (Promise.each(objs, (obj) => {
+                return this.trace(obj.id, type, "read", "relation", "all")
+            }))
+
+            return objs
+        }.bind(this))
     }
 
-    mutationEntityUpdateFields (entity, instance, def, upd) {
+    /*  update all relation fields of an entity  */
+    mutationEntityUpdateFields (type, obj, def, upd) {
         return co(function * () {
             for (let i = 0; i < upd.length; i++) {
                 let name = upd[i]
                 const changeRelation = co.wrap(function * (prefix, ids) {
                     for (let j = 0; j < ids.length; j++) {
                         let type = def[name]
-                        let foreign = yield (this.dm[type].findById(ids[j]))
-                        yield (instance[`${prefix}${capitalize(name)}`](foreign))
+                        let foreign = yield (this.models[type].findById(ids[j]))
+                        yield (obj[`${prefix}${capitalize(name)}`](foreign))
                     }
-                })
-                if (upd[name].$set) yield (changeRelation("set",    upd[name].$set))
-                if (upd[name].$del) yield (changeRelation("remove", upd[name].$del))
-                if (upd[name].$add) yield (changeRelation("add",    upd[name].$add))
+                }.bind(this))
+                if (upd[name].$set)
+                    yield (changeRelation("set",    upd[name].$set))
+                if (upd[name].$del)
+                    yield (changeRelation("remove", upd[name].$del))
+                if (upd[name].$add)
+                    yield (changeRelation("add",    upd[name].$add))
             }
-        })
+        }.bind(this))
     }
 
-    mutationEntityCreate (entity) {
+    /*  API: direct create a single entity  */
+    mutationEntityCreate (type) {
         return co.wrap(function * (parent, args, ctx, info) {
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this.fieldsOfGraphQLType(info, entity)
+            let defined = this.fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this.fieldsOfGraphQLRequest(args, info, entity)
+            let build = this.fieldsOfGraphQLRequest(args, info, type)
 
-            /*  auto-generate the id  */
+            /*  handle unique id  */
             if (build.attribute.id === undefined)
+                /*  auto-generate the id  */
                 build.attribute.id = (new UUID(1)).format()
             else {
-                let existing = yield (this.dm[entity].findById(build.attribute.id))
+                /*  ensure the id is unique  */
+                let existing = yield (this.models[type].findById(build.attribute.id))
                 if (existing !== null)
-                    throw new Error(`entity ${entity}#${build.attribute.id} already exists`)
+                    throw new Error(`entity ${type}#${build.attribute.id} already exists`)
             }
 
-            /*  check access to target  */
-            let allowed = yield (this.authorized("create", entity, null, ctx))
-            if (!allowed)
-                return new Error(`you are not allowed to create entity of type "${entity}"`)
+            /*  check access to entity  */
+            if (!(yield (this.authorized("create", type, null, ctx))))
+                throw new Error(`not allowed to create entity of type "${type}"`)
 
             /*  build and save as a new entity  */
-            let instance = this.dm.Account.build(build.attribute)
-            let err = yield (instance.save().catch((err) => err))
+            let obj = this.models[type].build(build.attribute)
+            let err = yield (obj.save().catch((err) => err))
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))
 
             /*  post-adjust the relationships according to the request  */
-            yield (this.mutationEntityUpdateFields(entity, instance,
+            yield (this.mutationEntityUpdateFields(type, obj,
                 defined.relation, build.relation))
 
-            /*  check access to target again  */
-            allowed = yield (this.authorized("read", entity, instance, ctx))
-            if (!allowed)
+            /*  check access to entity again  */
+            if (!(yield (this.authorized("read", type, obj, ctx))))
                 return null
+
+            /*  trace access  */
+            yield (this.trace(obj.id, type, "create", "direct", "one"))
 
             /*  return new entity  */
-            return instance
+            return obj
         }.bind(this))
     }
 
-    mutationEntityUpdateOne (entity) {
+    /*  API: direct update a single entity  */
+    mutationEntityUpdateOne (type) {
         return co.wrap(function * (parent, args, ctx, info) {
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this.fieldsOfGraphQLType(info, entity)
+            let defined = this.fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this.fieldsOfGraphQLRequest(args, info, entity)
+            let build = this.fieldsOfGraphQLRequest(args, info, type)
 
             /*  load entity instance  */
-            let instance = yield (this.dm[entity].findById(args.id))
-            if (instance === null)
-                throw new Error(`entity ${entity}#${args.id} not found`)
+            let obj = yield (this.models[type].findById(args.id))
+            if (obj === null)
+                throw new Error(`entity ${type}#${args.id} not found`)
 
-            /*  check access to target  */
-            let allowed = yield (this.authorized("update", entity, instance, ctx))
-            if (!allowed)
-                return new Error(`you are not allowed to update entity of type "${entity}"`)
+            /*  check access to entity  */
+            if (!(yield (this.authorized("update", type, obj, ctx))))
+                throw new Error(`not allowed to update entity of type "${type}"`)
 
             /*  adjust the attributes according to the request  */
-            instance.update(build.attribute)
+            obj.update(build.attribute)
 
             /*  adjust the relationships according to the request  */
-            yield (this.mutationEntityUpdateFields(entity, instance,
+            yield (this.mutationEntityUpdateFields(type, obj,
                 defined.relation, build.relation))
 
-            /*  check access to target again  */
-            allowed = yield (this.authorized("read", entity, instance, ctx))
-            if (!allowed)
+            /*  check access to entity again  */
+            if (!(yield (this.authorized("read", type, obj, ctx))))
                 return null
-            return instance
+
+            /*  trace access  */
+            yield (this.trace(obj.id, type, "update", "direct", "one"))
+
+            /*  return updated entity  */
+            return obj
         }.bind(this))
     }
 
-    mutationEntityUpdateMany (entity) {
+    /*  API: direct update of multiple entities  */
+    mutationEntityUpdateMany (type) {
         return co.wrap(function * (parent, args, ctx, info) {
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this.fieldsOfGraphQLType(info, entity)
+            let defined = this.fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this.fieldsOfGraphQLRequest(args, info, entity)
+            let build = this.fieldsOfGraphQLRequest(args, info, type)
 
             /*  load entity instances  */
-            let opts = this.findAllOptions(entity, args, info)
-            let instances = yield (this.dm[entity].findAll(opts))
-            if (instances.length === 0)
-                throw new Error(`no such entities found`)
+            let opts = this.findAllOptions(type, args, info)
+            let objs = yield (this.models[type].findAll(opts))
+            if (objs.length === 0)
+                throw new Error(`no such entities of type "${type}" found`)
 
             /*  iterate over all entities  */
-            for (let i = 0; i < instances.length; i++) {
-                let instance = instances[i]
+            for (let i = 0; i < objs.length; i++) {
+                let obj = objs[i]
 
-                /*  check access to target  */
-                let allowed = yield (this.authorized("update", entity, instance, ctx))
-                if (!allowed)
-                    return new Error(`you are not allowed to update entity of type "${entity}"`)
+                /*  check access to entity  */
+                if (!(yield (this.authorized("update", type, obj, ctx))))
+                    return new Error(`not allowed to update entity of type "${type}"`)
 
                 /*  adjust the attributes according to the request  */
-                instance.update(build.attribute)
+                obj.update(build.attribute)
 
                 /*  adjust the relationships according to the request  */
-                yield (this.mutationEntityUpdateFields(entity, instance,
+                yield (this.mutationEntityUpdateFields(type, obj,
                     defined.relation, build.relation))
             }
 
-            /*  return check access to targets again  */
-            return Promise.filter(instances, (instance) =>
-                this.authorized("read", entity, instance, ctx))
+            /*  check access to entities again  */
+            objs = yield (Promise.filter(objs, (instance) => {
+                return this.authorized("read", type, instance, ctx)
+            }))
+
+            /*  trace access  */
+            yield (Promise.each(objs, (obj) => {
+                return this.trace(obj.id, type, "update", "direct", "many")
+            }))
+
+            /*  return updated entites  */
+            return objs
         }.bind(this))
     }
 
-    mutationEntityDeleteOne (entity) {
+    /*  API: direct delete a single entity  */
+    mutationEntityDeleteOne (type) {
         return co.wrap(function * (parent, args, ctx /*, info */) {
             /*  load entity instance  */
-            let instance = yield (this.dm[entity].findById(args.id))
-            if (instance === null)
-                throw new Error(`entity ${entity}#${args.id} not found`)
+            let obj = yield (this.models[type].findById(args.id))
+            if (obj === null)
+                throw new Error(`entity ${type}#${args.id} not found`)
 
             /*  check access to target  */
-            let allowed = yield (this.authorized("delete", entity, instance, ctx))
-            if (!allowed)
-                return new Error(`you are not allowed to delete entity of type "${entity}"`)
+            if (!(yield (this.authorized("delete", type, obj, ctx))))
+                return new Error(`not allowed to delete entity of type "${type}"`)
 
             /*  delete the instance  */
-            let result = instance.id
-            instance.destroy()
+            let result = obj.id
+            obj.destroy()
+
+            /*  trace access  */
+            yield (this.trace(result, type, "delete", "direct", "one"))
 
             /*  return id of deleted entity  */
             return result
         }.bind(this))
     }
 
-    mutationEntityDeleteMany (entity) {
+    /*  API: direct delete multiple entities  */
+    mutationEntityDeleteMany (type) {
         return co.wrap(function * (parent, args, ctx, info) {
             /*  load entity instances  */
-            let opts = this.findAllOptions(entity, args, info)
-            let instances = yield (this.dm[entity].findAll(opts))
-            if (instances.length === 0)
-                throw new Error(`no such entities found`)
+            let opts = this.findAllOptions(type, args, info)
+            let objs = yield (this.models[type].findAll(opts))
+            if (objs.length === 0)
+                throw new Error(`no such entities of type "${type}" found`)
 
             /*  iterate over all entities  */
             let result = []
-            for (let i = 0; i < instances.length; i++) {
-                let instance = instances[i]
+            for (let i = 0; i < objs.length; i++) {
+                let obj = objs[i]
 
-                /*  check access to target  */
-                let allowed = yield (this.authorized("delete", entity, instance, ctx))
-                if (!allowed)
-                    return new Error(`you are not allowed to delete entity "${entity}#${instance.id}"`)
+                /*  check access to entity  */
+                if (!(yield (this.authorized("delete", type, obj, ctx))))
+                    throw new Error(`not allowed to delete entity "${type}#${obj.id}"`)
 
                 /*  adjust the attributes according to the request  */
-                result.push(instance.id)
-                instance.destroy()
+                result.push(obj.id)
+                obj.destroy()
             }
+
+            /*  trace access  */
+            yield (Promise.each(result, (id) => {
+                return this.trace(id, type, "delete", "direct", "many")
+            }))
 
             /*  return ids of deleted entities  */
             return result
