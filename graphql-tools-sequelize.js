@@ -43,7 +43,9 @@ export default class GraphQLToolsSequelize {
             return Promise.resolve(true)
         if (this.authorizers[type] === undefined)
             return Promise.resolve(true)
-        let result = this.authorizers[type](op, obj, ctx)
+        let result
+        try { result = this.authorizers[type](op, obj, ctx) }
+        catch (ex) { result = Promise.reject(ex) }
         if (typeof result === "boolean")
             result = Promise.resolve(result)
         return result
@@ -292,12 +294,14 @@ export default class GraphQLToolsSequelize {
                     throw new Error(`entity ${type}#${build.attribute.id} already exists`)
             }
 
+            /*  build a new entity  */
+            let obj = this.models[type].build(build.attribute)
+
             /*  check access to entity  */
-            if (!(yield (this.authorized("create", type, null, ctx))))
+            if (!(yield (this.authorized("create", type, obj, ctx))))
                 throw new Error(`not allowed to create entity of type "${type}"`)
 
-            /*  build and save as a new entity  */
-            let obj = this.models[type].build(build.attribute)
+            /*  save new entity  */
             let err = yield (obj.save().catch((err) => err))
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
