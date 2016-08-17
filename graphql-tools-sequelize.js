@@ -173,6 +173,21 @@ export default class GraphQLToolsSequelize {
         return opts
     }
 
+    /*  API: generate GraphQL schema definition for entity query  */
+    schemaEntityQuery (type) {
+        return `${type}(id: String!): [${type}]!\n` +
+               `${type}s(where: JSON, offset: Int = 0, limit: Int = 10, order: JSON): ${type}\n`
+    }
+
+    /*  API: generate GraphQL schema definition for entity mutation  */
+    schemaEntityMutation (type) {
+        return `create${type}(with: JSON): ${type}\n` +
+               `update${type}(id: String!, with: JSON!): ${type}\n` +
+               `update${type}s(where: JSON!, with: JSON!): [${type}]\n` +
+               `delete${type}(id: String! ): String\n` +
+               `delete${type}s(where: JSON!): [String]\n`
+    }
+
     /*  API: direct query single entity by id  */
     queryEntityOne (type) {
         return co.wrap(function * (parent, args, ctx) {
