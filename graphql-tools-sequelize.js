@@ -45,7 +45,7 @@ export default class GraphQLToolsSequelize {
             return Promise.resolve(true)
         let result
         try { result = this.authorizers[type](op, obj, ctx) }
-        catch (ex) { result = Promise.reject(ex) }
+        catch (ex) { result = Promise.resolve(false) }
         if (typeof result === "boolean")
             result = Promise.resolve(result)
         return result
@@ -102,17 +102,17 @@ export default class GraphQLToolsSequelize {
             if (defined.relation[name]) {
                 let value = args.with[name]
                 if (typeof value === "string")
-                    value = { $set: value }
+                    value = { set: value }
                 if (typeof value !== "object")
                     throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
-                if (typeof value.$set === "string")
-                    value.$set = [ value.$set ]
-                if (typeof value.$add === "string")
-                    value.$add = [ value.$add ]
-                if (typeof value.$del === "string")
-                    value.$del = [ value.$del ]
+                if (typeof value.set === "string")
+                    value.set = [ value.set ]
+                if (typeof value.add === "string")
+                    value.add = [ value.add ]
+                if (typeof value.del === "string")
+                    value.del = [ value.del ]
                 if (!Ducky.validate(value, `{
-                    $set?: [ string* ], $add?: [ string+ ], $del?: [ string+ ] }`))
+                    set?: [ string* ], add?: [ string+ ], del?: [ string+ ] }`))
                     throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
                 fields.relation[name] = value
             }
@@ -175,17 +175,17 @@ export default class GraphQLToolsSequelize {
 
     /*  API: generate GraphQL schema definition for entity query  */
     schemaEntityQuery (type) {
-        return `${type}(id: String!): [${type}]!\n` +
-               `${type}s(where: JSON, offset: Int = 0, limit: Int = 10, order: JSON): ${type}\n`
+        return `${type}(id: String!): ${type}\n` +
+               `${type}s(where: JSON, offset: Int = 0, limit: Int = 10, order: JSON): [${type}]!\n`
     }
 
     /*  API: generate GraphQL schema definition for entity mutation  */
     schemaEntityMutation (type) {
         return `create${type}(with: JSON): ${type}\n` +
                `update${type}(id: String!, with: JSON!): ${type}\n` +
-               `update${type}s(where: JSON!, with: JSON!): [${type}]\n` +
+               `update${type}s(where: JSON!, with: JSON!): [${type}]!\n` +
                `delete${type}(id: String! ): String\n` +
-               `delete${type}s(where: JSON!): [String]\n`
+               `delete${type}s(where: JSON!): [String]!\n`
     }
 
     /*  API: direct query single entity by id  */
@@ -270,21 +270,37 @@ export default class GraphQLToolsSequelize {
     /*  update all relation fields of an entity  */
     mutationEntityUpdateFields (type, obj, def, upd) {
         return co(function * () {
-            for (let i = 0; i < upd.length; i++) {
-                let name = upd[i]
+            let rels = Object.keys(upd)
+            for (let i = 0; i < rels.length; i++) {
+                let name  = rels[i]
+                let value = upd[name]
                 const changeRelation = co.wrap(function * (prefix, ids) {
                     for (let j = 0; j < ids.length; j++) {
+                        let id   = ids[j]
                         let type = def[name]
-                        let foreign = yield (this.models[type].findById(ids[j]))
-                        yield (obj[`${prefix}${capitalize(name)}`](foreign))
+                        let foreign = yield (this.models[type].findById(id))
+                        if (foreign === null)
+                            throw new Error(`no such entity ${type}#${id} found`)
+                        let method = `${prefix}${capitalize(name)}`
+                        if (typeof obj[method] === "function")
+                            yield (obj[method](foreign))
+                        else if (prefix === "add" || prefix === "remove") {
+                            /*  special case for 1-arity relationship!  */
+                            method = `set${capitalize(name)}`
+                            if (typeof obj[method] === "function")
+                                yield (obj[method](prefix === "add" ? foreign : null))
+                            else
+                                throw new Error(`relationship mutation method not found ` +
+                                    `to ${prefix} relation ${name} on type ${type}`)
+                        }
                     }
                 }.bind(this))
-                if (upd[name].$set)
-                    yield (changeRelation("set",    upd[name].$set))
-                if (upd[name].$del)
-                    yield (changeRelation("remove", upd[name].$del))
-                if (upd[name].$add)
-                    yield (changeRelation("add",    upd[name].$add))
+                if (value.set)
+                    yield (changeRelation("set",    value.set))
+                if (value.del)
+                    yield (changeRelation("remove", value.del))
+                if (value.add)
+                    yield (changeRelation("add",    value.add))
             }
         }.bind(this))
     }
@@ -435,7 +451,7 @@ export default class GraphQLToolsSequelize {
 
             /*  delete the instance  */
             let result = obj.id
-            obj.destroy()
+            yield (obj.destroy())
 
             /*  trace access  */
             yield (this.trace(result, type, "delete", "direct", "one"))
@@ -465,7 +481,7 @@ export default class GraphQLToolsSequelize {
 
                 /*  adjust the attributes according to the request  */
                 result.push(obj.id)
-                obj.destroy()
+                yield (obj.destroy())
             }
 
             /*  trace access  */
