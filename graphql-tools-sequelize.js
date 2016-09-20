@@ -120,13 +120,55 @@ export default class GraphQLToolsSequelize {
                 let type = this.mapScalarType(defined.attribute[name], "graphql", "javascript")
                 if (typeof args.with[name] !== type)
                     throw new Error(`value for attribute "${name}" on type "${entity}" ` +
-                        `has to be compatible with GrapQL type "${defined.attribute[name]}"`)
+                        `has to be compatible with GraphQL type "${defined.attribute[name]}"`)
                 fields.attribute[name] = args.with[name]
             }
             else
                 throw new Error(`field "${name}" not known on type "${entity}"`)
         })
         return fields
+    }
+
+    /*  GraphQL standard options to Sequelize findById() options conversion  */
+    findOneOptions (entity, args, info) {
+        let opts = {}
+
+        /*  determine allowed fields  */
+        let allowed = this.fieldsOfGraphQLType(info, entity)
+
+        /*  determine Sequelize "where" parameter  */
+        if (args.where !== undefined) {
+            if (typeof args.where !== "object")
+                throw new Error(`invalid "where" argument`)
+            opts.where = args.where
+            opts.where = {}
+            Object.keys(args.where).forEach((field) => {
+                if (!allowed.attribute[field])
+                    throw new Error(`invalid "where" argument: ` +
+                        `no such field "${field}" on type "${entity}"`)
+                opts.where[field] = args.where[field]
+            })
+        }
+
+        /*  determine Sequelize "attributes" parameter  */
+        let fieldInfo = GraphQLFields(info)
+        let fields = Object.keys(fieldInfo)
+        let attr = fields.filter((field) => allowed.attribute[field])
+        let rels = fields.filter((field) => allowed.relation[field])
+        if (rels.length === 0) {
+            /*  in case no relationships should be followed at all from this entity,
+                we can load the requested attributes only. If any relationship
+                should be followed from this entity, we have to avoid
+                such an attribute filter as this means that at least "hasOne" relationships
+                would be "null" when dereferenced afterwards.  */
+            if (attr.length === 0)
+                /*  should not happen as GraphQL does not allow an entirely empty selection  */
+                opts.attributes = [ this.sequelize.literal("1") ]
+            else
+                opts.attributes = attr
+        }
+
+        return opts
     }
 
     /*  GraphQL standard options to Sequelize findAll() options conversion  */
@@ -166,33 +208,78 @@ export default class GraphQLToolsSequelize {
         }
 
         /*  determine Sequelize "attributes" parameter  */
-        let attributes = Object.keys(GraphQLFields(info))
-        if (attributes.length > 0)
-            opts.attributes = attributes.filter((field) => allowed.attribute[field])
+        let fieldInfo = GraphQLFields(info)
+        let fields = Object.keys(fieldInfo)
+        let attr = fields.filter((field) => allowed.attribute[field])
+        let rels = fields.filter((field) => allowed.relation[field])
+        if (rels.length === 0) {
+            /*  in case no relationships should be followed at all from this entity,
+                we can load the requested attributes only. If any relationship
+                should be followed from this entity, we have to avoid
+                such an attribute filter as this means that at least "hasOne" relationships
+                would be "null" when dereferenced afterwards.  */
+            if (attr.length === 0)
+                /*  should not happen as GraphQL does not allow an entirely empty selection  */
+                opts.attributes = [ this.sequelize.literal("1") ]
+            else
+                opts.attributes = attr
+        }
 
         return opts
     }
 
     /*  API: generate GraphQL schema definition for entity query  */
     schemaEntityQuery (type) {
-        return `${type}(id: String!): ${type}\n` +
-               `${type}s(where: JSON, offset: Int = 0, limit: Int = 10, order: JSON): [${type}]!\n`
+        return `` +
+            `#  Query one **${type}** entity by its unique id.\n` +
+            `${type}(id: String!): ${type}\n` +
+            `#  Query all **${type}** entities by a condition (\`where\`), optionally sort them (\`order\`)\n` +
+            `#  and optionally reduce the resulting entity list to a maximum number of entities (\`limit\`),\n` +
+            `#  optionally starting the result set at the n-th entity (zero-based \`offset\`).\n` +
+            `${type}s(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${type}]!\n`
+    }
+
+    /*  API: generate GraphQL schema definition for relationship query  */
+    schemaRelationQueryOne (name, type) {
+        return `` +
+            `#  Query one **${type}** entity by following the **${name}** relationship.\n` +
+            `#  The entity can be optionally filtered by a condition (\`where\`).\n` +
+            `${name}(where: JSON): ${type}\n`
+    }
+
+    /*  API: generate GraphQL schema definition for relationship query  */
+    schemaRelationQueryMany (name, type) {
+        return `` +
+            `#  Query one or many **${type}** entities by following the **${name}** relationship.\n` +
+            `#  The entities can be filtered by a condition (\`where\`), optionally be sorted (\`order\`)\n` +
+            `#  and optionally reduced to a maximum number of entities (\`limit\`),\n` +
+            `#  optionally starting the result set at the n-th entity (zero-based \`offset\`).\n` +
+            `${name}(where: JSON, offset: Int = 0, limit: Int = 100, order: JSON): [${type}]!\n`
     }
 
     /*  API: generate GraphQL schema definition for entity mutation  */
     schemaEntityMutation (type) {
-        return `create${type}(with: JSON): ${type}\n` +
-               `update${type}(id: String!, with: JSON!): ${type}\n` +
-               `update${type}s(where: JSON!, with: JSON!): [${type}]!\n` +
-               `delete${type}(id: String! ): String\n` +
-               `delete${type}s(where: JSON!): [String]!\n`
+        return `` +
+            `# Create one **${type}** entity, optionally with specified attributes (\`with\`)\n` +
+            `create${type}(with: JSON): ${type}!\n` +
+            `# Clone one **${type}** entity (found by unique id), by cloning its attributes (but not its relationships).\n` +
+            `clone${type}(id: String!): ${type}!\n` +
+            `# Update one **${type}** entity (found by unique id) with specified attributes.\n` +
+            `update${type}(id: String!, with: JSON!): ${type}!\n` +
+            `# Update zero or more **${type}** entities (found by condition) with specified attributes.\n` +
+            `update${type}s(where: JSON!, with: JSON!): [${type}]!\n` +
+            `# Delete one **${type}** entity (found by unique id).\n` +
+            `delete${type}(id: String! ): String\n` +
+            `# Delete zero or more **${type}** entities (found by condition).\n` +
+            `delete${type}s(where: JSON!): [String]!\n`
     }
 
     /*  API: direct query single entity by id  */
     queryEntityOne (type) {
-        return co.wrap(function * (parent, args, ctx) {
+        return co.wrap(function * (parent, args, ctx, info) {
             /*  find entity  */
-            let obj = yield (this.models[type].findById(args.id))
+            let opts = this.findOneOptions(type, args, info)
+            let obj = yield (this.models[type].findById(args.id, opts))
             if (obj === null)
                 return null
 
@@ -228,11 +315,12 @@ export default class GraphQLToolsSequelize {
         }.bind(this))
     }
 
-    /*  API: direct query single entity by 1-ariy relationship  */
+    /*  API: direct query single entity by 1-ary relationship  */
     queryRelationOne (type, getter) {
-        return co.wrap(function * (parent, args, ctx) {
+        return co.wrap(function * (parent, args, ctx, info) {
             /*  find entity  */
-            let obj = yield(parent[getter]())
+            let opts = this.findOneOptions(type, args, info)
+            let obj = yield(parent[getter](opts))
             if (obj === null)
                 return null
 
@@ -247,11 +335,12 @@ export default class GraphQLToolsSequelize {
         }.bind(this))
     }
 
-    /*  API: direct query all entities by N-ariy relationship  */
+    /*  API: direct query all entities by N-ary relationship  */
     queryRelationMany (type, getter) {
-        return co.wrap(function * (parent, args, ctx) {
+        return co.wrap(function * (parent, args, ctx, info) {
             /*  find entities  */
-            let objs = yield (parent[getter]())
+            let opts = this.findAllOptions(type, args, info)
+            let objs = yield (parent[getter](opts))
 
             /*  check authorization  */
             objs = yield (Promise.filter(objs, (obj) => {
@@ -341,6 +430,52 @@ export default class GraphQLToolsSequelize {
             /*  post-adjust the relationships according to the request  */
             yield (this.mutationEntityUpdateFields(type, obj,
                 defined.relation, build.relation))
+
+            /*  check access to entity again  */
+            if (!(yield (this.authorized("read", type, obj, ctx))))
+                return null
+
+            /*  trace access  */
+            yield (this.trace(obj.id, type, "create", "direct", "one"))
+
+            /*  return new entity  */
+            return obj
+        }.bind(this))
+    }
+
+    /*  API: direct clone a single entity (without relationships)  */
+    mutationEntityClone (type) {
+        return co.wrap(function * (parent, args, ctx, info) {
+            /*  determine fields of entity as defined in GraphQL schema  */
+            let defined = this.fieldsOfGraphQLType(info, type)
+
+            /*  load source entity  */
+            let src = yield (this.models[type].findById(args.id))
+            if (src === null)
+                throw new Error(`source entity ${type}#${args.id} not found`)
+
+            /*  check access to source entity  */
+            if (!(yield (this.authorized("read", type, src, ctx))))
+                throw new Error(`not allowed to read entity of type "${type}"`)
+
+            /*  build a new entity  */
+            let data = {}
+            data.id = (new UUID(1)).format()
+            Object.keys(defined.attribute).forEach((attr) => {
+                if (attr !== "id")
+                    data[attr] = src[attr]
+            })
+            let obj = this.models[type].build(data)
+
+            /*  check access to entity  */
+            if (!(yield (this.authorized("create", type, obj, ctx))))
+                throw new Error(`not allowed to create entity of type "${type}"`)
+
+            /*  save new entity  */
+            let err = yield (obj.save().catch((err) => err))
+            if (typeof err === "object" && err instanceof Error)
+                throw new Error("Sequelize: save: " + err.message + ":" +
+                    err.errors.map((e) => e.message).join("; "))
 
             /*  check access to entity again  */
             if (!(yield (this.authorized("read", type, obj, ctx))))
