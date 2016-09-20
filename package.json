@@ -28,11 +28,12 @@
         "pure-uuid":            "~1.4.0"
     },
     "devDependencies": {
-        "jshint":               "~2.9.3",
         "babel-cli":            "~6.14.0",
-        "babel-preset-es2015":  "~6.14.0"
+        "babel-preset-es2015":  "~6.14.0",
+        "babel-eslint":         "~6.1.2",
+        "eslint":               "~3.5.0"
     },
     "scripts": {
-        "prepublish": "jshint --config jshint.json graphql-tools-sequelize.js && babel --presets es2015 graphql-tools-sequelize.js >graphql-tools-sequelize.js5"
+        "prepublish": "eslint --config eslint.json graphql-tools-sequelize.js && babel --presets es2015 graphql-tools-sequelize.js >graphql-tools-sequelize.js5"
     }
 }
