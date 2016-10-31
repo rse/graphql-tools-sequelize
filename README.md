@@ -2,8 +2,6 @@
 GraphQL-Tools-Sequelize
 ========================
 
-[HERE BE DRAGONS -- STILL WORK IN PROGRESS]
-
 Resolver Functions for GraphQL-Tools using Sequelize ORM
 
 <p/>
@@ -18,22 +16,33 @@ About
 This Node.js module provides GraphQL resolver functions for [GraphQL
 Tools](https://github.com/apollostack/graphql-tools) or plain
 [GraphQL.js](https://github.com/graphql/graphql-js) which use the
-[Sequelize](http://sequelizejs.com) ORM to access entities and their
+[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) to access entities and their
 relationships in an underlying RDBMS.
 
 Installation
 ------------
 
 ```shell
-$ npm install graphql-tools-sequelize
+$ npm install graphql-tools graphql-tools-sequelize sequelize
 ```
 
 Usage
 -----
 
-```js
+Please see the [all-in-one sample](./sample/) for usage details!
+
+Application Programming Interface (API)
+---------------------------------------
+
 FIXME
-```
+
+Assumptions
+-----------
+
+It is assumed that all your Sequelize entities have a field `id` of type
+`UUID` which is the primary key of an entity. It is also assumed that
+you define the GraphQL scalar types `UUID` and `JSON` with the help of
+[GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
 
 License
 -------
