@@ -25,15 +25,17 @@
         "ducky":                "~2.4.0",
         "co":                   "~4.6.0",
         "capitalize":           "~1.0.0",
-        "pure-uuid":            "~1.4.0"
+        "elasticlunr":          "~0.9.5",
+        "pure-uuid":            "~1.4.2"
     },
     "devDependencies": {
-        "babel-cli":            "~6.14.0",
-        "babel-preset-es2015":  "~6.14.0",
-        "babel-eslint":         "~6.1.2",
-        "eslint":               "~3.5.0"
+        "babel-cli":            "~6.18.0",
+        "babel-preset-es2015":  "~6.18.0",
+        "babel-preset-es2016":  "~6.16.0",
+        "babel-eslint":         "~7.1.0",
+        "eslint":               "~3.9.0"
     },
     "scripts": {
-        "prepublish": "eslint --config eslint.json graphql-tools-sequelize.js && babel --presets es2015 graphql-tools-sequelize.js >graphql-tools-sequelize.js5"
+        "prepublish": "eslint --config eslint.json graphql-tools-sequelize.js && babel --presets es2015,es2016 graphql-tools-sequelize.js >graphql-tools-sequelize.js5"
     }
 }
