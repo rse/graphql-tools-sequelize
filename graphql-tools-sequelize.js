@@ -602,7 +602,7 @@ export default class GraphQLToolsSequelize {
     entityCreateSchema (type) {
         return `` +
             `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-            `create(id: UUID!, with: JSON): ${type}!\n`
+            `create(id: UUID, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
         return co.wrap(function * (entity, args, ctx, info) {
