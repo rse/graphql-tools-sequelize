@@ -94,29 +94,6 @@ export default class GraphQLToolsSequelize {
         return result
     }
 
-    /*  map scalar types between GraphQL, JavaScript and Sequelize  */
-    _mapScalarType (info, type, from, to) {
-        const scalarTypeMap = [
-            { graphql: "Boolean", javascript: "boolean", sequelize: "BOOLEAN" },
-            { graphql: "Int",     javascript: "number",  sequelize: "INTEGER" },
-            { graphql: "Float",   javascript: "number",  sequelize: "FLOAT" },
-            { graphql: "String",  javascript: "string",  sequelize: "STRING" },
-            { graphql: "ID",      javascript: "string",  sequelize: "STRING" }
-        ]
-        let found = scalarTypeMap.find((item) => item[from] === type)
-        if (found === undefined) {
-            if (info.schema._typeMap[type] !== undefined) {
-                let def = info.schema._typeMap[type]
-                if (   def.constructor.name === "GraphQLScalarType"
-                    || def.constructor.name === "GraphQLEnumType"  )
-                    found = scalarTypeMap.find((item) => item.graphql === "String")
-            }
-        }
-        if (found !== undefined)
-            found = found[to]
-        return found
-    }
-
     /*  determine fields (and their type) of a GraphQL object type  */
     _fieldsOfGraphQLType (info, entity) {
         let fields = { attribute: {}, relation: {}, method: {} }
@@ -163,11 +140,22 @@ export default class GraphQLToolsSequelize {
                     fields.relation[name] = value
                 }
                 else if (defined.attribute[name]) {
-                    let type = this._mapScalarType(info, defined.attribute[name], "graphql", "javascript")
-                    if (typeof args.with[name] !== type)
-                        throw new Error(`value for attribute "${name}" on type "${entity}" ` +
-                            `has to be compatible with GraphQL type "${defined.attribute[name]}"`)
-                    fields.attribute[name] = args.with[name]
+                    let value = args.with[name]
+                    let type = info.schema._typeMap[entity]._fields[name].type
+                    while (typeof type.ofType === "object")
+                        type = type.ofType
+                    if (   type.constructor.name === "GraphQLScalarType"
+                        && typeof type.parseValue === "function"        )
+                        value = type.parseValue(value)
+                    else if (type.constructor.name === "GraphQLEnumType") {
+                        if (typeof value !== "string")
+                            throw new Error(`invalid value type (expected string) for ` +
+                                `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
+                        if (type._enumConfig.values[value] === undefined)
+                            throw new Error(`invalid value for ` +
+                                `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
+                    }
+                    fields.attribute[name] = value
                 }
                 else
                     throw new Error(`field "${name}" not known on type "${entity}"`)
