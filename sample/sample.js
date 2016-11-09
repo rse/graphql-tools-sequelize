@@ -94,7 +94,7 @@ import Sequelize             from "sequelize"
         validator:  validator,
         authorizer: authorizer,
         tracer: async (type, oid, obj, op, via, onto /*, ctx */) => {
-            console.log(`trace: type=${type} oid=${oid} op=${op} via=${via} onto=${onto}`)
+            console.log(`trace: type=${type} oid=${oid || "none"} op=${op} via=${via} onto=${onto}`)
         },
         fts: {
             "OrgUnit": [ "name" ],
