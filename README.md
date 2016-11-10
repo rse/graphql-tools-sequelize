@@ -232,7 +232,25 @@ For more details see the [all-in-one sample](./sample/).
 Application Programming Interface (API)
 ---------------------------------------
 
-FIXME
+- `entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
+  `entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for querying one, many or all entities of particular entity
+  type `target` when coming from entity type `source` -- either directly
+  (in case `relation` is the empty string) or via relationship `relation`. The `target` is either just the name
+  `foo` of an entity type `foo` (for relationship of cardinality 0..1)
+  or `foo*` (for relationship of cardinality 0..N). Based on the combination
+  of `relation` and the cardinality of `target`, four GraphQL schema
+  entries and corresponding GraphQL resolver functions are generated:
+
+    - empty `relation` and `target` cardinality 0..1:<br/>
+      `${target}(id: String): ${target}\n`
+    - empty `relation` and `target` cardinality 0..N:<br/>
+      `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+    - non-empty `relation` and `target` cardinality 0..1:<br/>
+      `${relation}(where: JSON): ${target}\n`
+    - non-empty `relation` and `target` cardinality 0..N:<br/>
+      `${relation}(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
 
 Assumptions
 -----------
