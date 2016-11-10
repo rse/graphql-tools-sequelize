@@ -85,7 +85,7 @@ await gts.boot()
 Now you can use it to conveniently create a GraphQL schema
 definition as the interface for operating on your domain model:
 
-```
+```js
 const definition = `
     schema {
         query:    Root
@@ -123,6 +123,7 @@ const definition = `
         ${gts.entityDeleteSchema("Person")}
     }
 `
+```
 
 You also use it to define the corresponding GraphQL resolver functions:
 
