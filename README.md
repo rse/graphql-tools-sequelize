@@ -232,8 +232,40 @@ For more details see the [all-in-one sample](./sample/).
 Application Programming Interface (API)
 ---------------------------------------
 
-- `entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
-  `entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
+- `import GraphQLToolsSequelize from "graphql-tools-sequelize`<br/>
+  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`:<br/>
+
+  Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
+  The `options` have to given, but can an empty objects. It can contain the following
+  entries:
+
+    - `validator(type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
+      Optionally validate entity object `obj` (of entity type `type`)
+      just before create or update operations. If the resulting
+      Promise is rejected, the create or update operation fails.
+      The `ctx` object is just passed through
+      from the `GraphQL.graphql()` call.
+
+    - `authorizer(op: String, type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
+      Optionally authorize entity object `obj` (of entity type `type`)
+      for operation `op`. The `ctx` object is just passed through from
+      the `GraphQL.graphql()` call. If the resulting Promise is rejected
+      or returns `false`, the operation fails.
+
+    - `tracer(type: String, oid: String, obj: Object, op: String, via: String, onto: String, ctx: Object): Promise<any>`:<br/>
+      Optionally trace the operation `op` on entity object `obj` (which has object id `oid`).
+
+    - `fts: { [String]: String[] }`:<br/>
+      Enables the Full-Text-Search (FTS) mechanism for all configured entity types
+      and their listed attributes.
+
+- `gts.boot(): Promise`:<br/>
+
+  Bootstrap the GraphQL-Tools-Sequelize instance. It internally
+  mainly initialized the Full-Text-Search (FTS) mechanism.
+
+- `gts.entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
+  `gts.entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
 
   Generate a GraphQL schema entry and a corresponding GraphQL resolver
   function for querying one, many or all entities of particular entity
@@ -284,8 +316,8 @@ Application Programming Interface (API)
   the entries in the GraphQL schema and are visible through
   GraphQL schema introspection tools like GraphiQL.
 
-- `entity{Create,Clone,Update,Delete}Schema(type: String): String`,<br/>
-  `entity{Create,Clone,Update,Delete}Resolver(type: String): Function`:<br/>
+- `gts.entity{Create,Clone,Update,Delete}Schema(type: String): String`,<br/>
+  `gts.entity{Create,Clone,Update,Delete}Resolver(type: String): Function`:<br/>
 
   Generate a GraphQL schema entry and a corresponding GraphQL resolver
   function for mutating one, many or all entities of particular entity
