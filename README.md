@@ -236,21 +236,83 @@ Application Programming Interface (API)
   `entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
   Generate a GraphQL schema entry and a corresponding GraphQL resolver
   function for querying one, many or all entities of particular entity
-  type `target` when coming from entity type `source` -- either directly
-  (in case `relation` is the empty string) or via relationship `relation`. The `target` is either just the name
-  `foo` of an entity type `foo` (for relationship of cardinality 0..1)
-  or `foo*` (for relationship of cardinality 0..N). Based on the combination
-  of `relation` and the cardinality of `target`, four GraphQL schema
-  entries and corresponding GraphQL resolver functions are generated:
+  type `target` when coming from entity type `source` -- either
+  directly (in case `relation` is the empty string) or via relationship
+  `relation`. The `target` is either just the name `foo` of an entity
+  type `foo` (for relationship of cardinality 0..1) or `foo*` (for
+  relationship of cardinality 0..N). Based on the combination of
+  `relation` and the cardinality of `target`, four distinct GraphQL schema
+  entries (and corresponding GraphQL resolver functions) are generated:
 
     - empty `relation` and `target` cardinality 0..1:<br/>
-      `${target}(id: String): ${target}\n`
+      ```js
+`# Query one [${target}]() entity by its unique id.\n` +
+`${target}(id: String): ${target}\n`
+      ```
+
     - empty `relation` and `target` cardinality 0..N:<br/>
-      `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+      ```js
+`# Query one or many [${target}]() entities,\n` +
+`# by either an (optionally available) full-text-search (\`query\`)\n` +
+`# or an (always available) attribute-based condition (\`where\`),\n` +
+`# optionally sort them (\`order\`),\n` +
+`# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
+`# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
+`${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+      ```
+
     - non-empty `relation` and `target` cardinality 0..1:<br/>
-      `${relation}(where: JSON): ${target}\n`
+      ```js
+`# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+`# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
+`${relation}(where: JSON): ${target}\n`
+      ```
+
     - non-empty `relation` and `target` cardinality 0..N:<br/>
-      `${relation}(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+      ```js
+`# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+`# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
+`${relation}(where: JSON): ${target}\n`
+      ```
+
+  The comments are intentionally also generated, as they document
+  the entries in the GraphQL schema and are visible through
+  GraphQL schema introspection tools like GraphiQL.
+
+- `entity{Create,Clone,Update,Delete}Schema(type: String): String`,<br/>
+  `entity{Create,Clone,Update,Delete}Resolver(type: String): Function`:<br/>
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for mutating one, many or all entities of particular entity
+  type `type`. The following GraphQL schema
+  entries (and corresponding GraphQL resolver functions) are generated:
+
+    - For `entityCreate{Schema,Resolver}(type)`:<br/>
+      ```js
+`# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
+`create(id: UUID, with: JSON): ${type}!\n`
+      ```
+
+    - For `entityClone{Schema,Resolver}(type)`:<br/>
+      ```js
+`# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
+`clone: ${type}!\n`
+      ```
+
+    - For `entityUpdate{Schema,Resolver}(type)`:<br/>
+      ```js
+`# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
+`update(with: JSON!): ${type}!\n`
+      ```
+
+    - For `entityDelete{Schema,Resolver}(type)`:<br/>
+      ```js
+`# Delete one [${type}]() entity.\n` +
+`delete: UUID!\n`
+      ```
+
+  The comments are intentionally also generated, as they document
+  the entries in the GraphQL schema and are visible through
+  GraphQL schema introspection tools like GraphiQL.
 
 Assumptions
 -----------
