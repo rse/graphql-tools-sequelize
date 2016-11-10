@@ -15,7 +15,7 @@ About
 
 This Node.js module provides an integration of [GraphQL
 Tools](https://github.com/apollostack/graphql-tools) and
-[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) to operate the on entities and
+[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) to operate on the entities and
 their relationships of an underlying RDBMS through [GraphQL](http://graphql.org/).
 It provides schema definitions and corresponding resolver functions
 for querying and mutating entities and their relationships in a natural
