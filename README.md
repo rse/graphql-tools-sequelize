@@ -245,7 +245,8 @@ Application Programming Interface (API)
   entries (and corresponding GraphQL resolver functions) are generated:
 
     - empty `relation` and `target` cardinality 0..1:<br/>
-      ```js
+
+    ```js
 `# Query one [${target}]() entity by its unique id.\n` +
 `${target}(id: String): ${target}\n`
       ```
