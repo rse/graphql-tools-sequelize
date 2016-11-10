@@ -200,10 +200,7 @@ mutation {
         c1: create(id: "ca8c588a-a6c8-11e6-8f19-080027e303e4", with: {
             initials: "EH",
             name:     "Example Holding",
-            director: "c9965340-a6c8-11e6-ac95-080027e303e4",
-            members: { set: [
-                "c9965340-a6c8-11e6-ac95-080027e303e4"
-            ] }
+            director: "c9965340-a6c8-11e6-ac95-080027e303e4"
         }) { id }
         c2: create(id: "cabaa4ce-a6c8-11e6-9d6d-080027e303e4", with: {
             initials:   "EC",
@@ -217,12 +214,16 @@ mutation {
         }) { id }
     }
     q1: OrgUnits(where: {
-        initials: "BB"
+        initials: "EC"
     }) {
         name
         director   { initials name }
         members    { initials name }
-        parentUnit { name }
+        parentUnit {
+            name
+            director   { initials name }
+            members    { initials name }
+        }
     }
 }
 ```
