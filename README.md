@@ -234,6 +234,7 @@ Application Programming Interface (API)
 
 - `entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
   `entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
+
   Generate a GraphQL schema entry and a corresponding GraphQL resolver
   function for querying one, many or all entities of particular entity
   type `target` when coming from entity type `source` -- either
@@ -252,6 +253,7 @@ Application Programming Interface (API)
       ```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
+
       ```js
 `# Query one or many [${target}]() entities,\n` +
 `# by either an (optionally available) full-text-search (\`query\`)\n` +
@@ -263,6 +265,7 @@ Application Programming Interface (API)
       ```
 
     - non-empty `relation` and `target` cardinality 0..1:<br/>
+
       ```js
 `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
 `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
@@ -270,6 +273,7 @@ Application Programming Interface (API)
       ```
 
     - non-empty `relation` and `target` cardinality 0..N:<br/>
+
       ```js
 `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
 `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
@@ -282,30 +286,35 @@ Application Programming Interface (API)
 
 - `entity{Create,Clone,Update,Delete}Schema(type: String): String`,<br/>
   `entity{Create,Clone,Update,Delete}Resolver(type: String): Function`:<br/>
+
   Generate a GraphQL schema entry and a corresponding GraphQL resolver
   function for mutating one, many or all entities of particular entity
   type `type`. The following GraphQL schema
   entries (and corresponding GraphQL resolver functions) are generated:
 
     - For `entityCreate{Schema,Resolver}(type)`:<br/>
+
       ```js
 `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
 `create(id: UUID, with: JSON): ${type}!\n`
       ```
 
     - For `entityClone{Schema,Resolver}(type)`:<br/>
+
       ```js
 `# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
 `clone: ${type}!\n`
       ```
 
     - For `entityUpdate{Schema,Resolver}(type)`:<br/>
+
       ```js
 `# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
 `update(with: JSON!): ${type}!\n`
       ```
 
     - For `entityDelete{Schema,Resolver}(type)`:<br/>
+
       ```js
 `# Delete one [${type}]() entity.\n` +
 `delete: UUID!\n`
