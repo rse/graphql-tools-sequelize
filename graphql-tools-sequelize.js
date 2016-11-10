@@ -85,10 +85,10 @@ export default class GraphQLToolsSequelize {
     }
 
     /*   optionally validate attributes of entity  */
-    _validate (type, obj) {
+    _validate (type, obj, ctx) {
         if (this._validator === null)
             return Promise.resolve(true)
-        let result = this._validator.call(null, type, obj)
+        let result = this._validator.call(null, type, obj, ctx)
         if (!(typeof result === "object" && typeof result.then === "function"))
             result = Promise.resolve(result)
         return result
@@ -622,7 +622,7 @@ export default class GraphQLToolsSequelize {
             }
 
             /*  validate attributes  */
-            yield (this._validate(type, build.attribute))
+            yield (this._validate(type, build.attribute, ctx))
 
             /*  build a new entity  */
             let obj = this._models[type].build(build.attribute)
@@ -742,7 +742,7 @@ export default class GraphQLToolsSequelize {
                 throw new Error(`not allowed to update entity of type "${type}"`)
 
             /*  validate attributes  */
-            yield (this._validate(type, build.attribute))
+            yield (this._validate(type, build.attribute, ctx))
 
             /*  adjust the attributes according to the request  */
             let opts = {}
