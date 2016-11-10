@@ -773,7 +773,7 @@ export default class GraphQLToolsSequelize {
     entityDeleteSchema (type) {
         return `` +
             `# Delete one [${type}]() entity.\n` +
-            `delete: String!\n`
+            `delete: UUID!\n`
     }
     entityDeleteResolver (type) {
         return co.wrap(function * (entity, args, ctx, info) {
