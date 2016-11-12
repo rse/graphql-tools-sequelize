@@ -28,7 +28,6 @@ import Ducky             from "ducky"
 import co                from "co"
 import Promise           from "bluebird"
 import capitalize        from "capitalize"
-import GraphQLFields     from "graphql-fields"
 import elasticlunr       from "elasticlunr"
 
 /*  the API class  */
@@ -92,6 +91,33 @@ export default class GraphQLToolsSequelize {
         if (!(typeof result === "object" && typeof result.then === "function"))
             result = Promise.resolve(result)
         return result
+    }
+
+    /*  return requested fields of GraphQL query  */
+    _graphqlRequestedFields (info, obj) {
+        const flattenAST = (ast, obj) => {
+            let selections = []
+            if (   ast
+                && ast.selectionSet
+                && ast.selectionSet.selections
+                && ast.selectionSet.selections.length > 0)
+                selections = ast.selectionSet.selections
+            return selections.reduce((flattened, ast) => {
+                if (ast.kind === "InlineFragment")
+                    flattened = flattenAST(ast, flattened)
+                else if (ast.kind === "FragmentSpread")
+                    flattened = flattenAST(info.fragments[ast.name.value], flattened)
+                else {
+                    const name = ast.name.value
+                    if (flattened[name])
+                        Object.assign(flattened[name], flattenAST(ast, flattened[name]))
+                    else
+                        flattened[name] = flattenAST(ast, {})
+                }
+                return flattened
+            }, obj)
+        }
+        return info.fieldNodes.reduce((obj, ast) => flattenAST(ast, obj), obj || {})
     }
 
     /*  determine fields (and their type) of a GraphQL object type  */
@@ -186,7 +212,7 @@ export default class GraphQLToolsSequelize {
         }
 
         /*  determine Sequelize "attributes" parameter  */
-        let fieldInfo = GraphQLFields(info)
+        let fieldInfo = this._graphqlRequestedFields(info)
         let fields = Object.keys(fieldInfo)
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
@@ -243,7 +269,7 @@ export default class GraphQLToolsSequelize {
         }
 
         /*  determine Sequelize "attributes" parameter  */
-        let fieldInfo = GraphQLFields(info)
+        let fieldInfo = this._graphqlRequestedFields(info)
         let fields = Object.keys(fieldInfo)
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
