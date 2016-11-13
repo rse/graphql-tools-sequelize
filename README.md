@@ -13,19 +13,23 @@ Integration of GraphQL-Tools and Sequelize ORM
 About
 -----
 
-This Node.js module provides an integration of [GraphQL
-Tools](https://github.com/apollostack/graphql-tools) and
-[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) to operate on the entities and
-their relationships of an underlying RDBMS through [GraphQL](http://graphql.org/).
+This [Node.js](https://nodejs.org) module provides an integration of
+the [GraphQL.js](https://github.com/graphql/graphql-js) wrapper
+[GraphQL-Tools](https://github.com/apollostack/graphql-tools) and the
+[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) in order to operate on
+the entities and their relationships of an underlying RDBMS through [GraphQL](http://graphql.org/).
 It provides schema definitions and corresponding resolver functions
 for querying and mutating entities and their relationships in a natural
-Object-Oriented way.
+Object-Oriented (OO) way.
 
 Installation
 ------------
 
 ```shell
-$ npm install graphql-tools graphql-tools-sequelize sequelize
+$ npm install \
+  graphql graphql-tools graphql-tools-types \
+  graphql-tools-sequelize sequelize \
+  --save-dev
 ```
 
 Usage
