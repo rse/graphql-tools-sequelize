@@ -19,8 +19,8 @@ the [GraphQL.js](https://github.com/graphql/graphql-js) wrapper
 [GraphQL-Tools](https://github.com/apollostack/graphql-tools) and the
 [Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM) in order to operate on
 the entities and their relationships of an underlying RDBMS through [GraphQL](http://graphql.org/).
-It provides schema definitions and corresponding resolver functions
-for querying and mutating entities and their relationships in a natural
+It provides functions for GraphQL schema definition entries and their corresponding resolver functions
+for querying and mutating entities and their relationships through GraphQL in a natural
 Object-Oriented (OO) way.
 
 Installation
@@ -60,8 +60,10 @@ With Sequelize ORM this could be defined on the RDBMS level as:
 
 ```js
 import Sequelize from "sequelize"
+
 const db = new Sequelize([...])
 const dm = {}
+
 dm.OrgUnit = db.define("OrgUnit", {
     id:         { type: Sequelize.UUID,        primaryKey: true  },
     initials:   { type: Sequelize.STRING(3),   allowNull:  false },
@@ -72,6 +74,7 @@ dm.Person = db.define("Person", {
     initials:   { type: Sequelize.STRING(3),   allowNull:  false },
     name:       { type: Sequelize.STRING(100), allowNull:  false }
 })
+
 dm.OrgUnit.belongsTo(dm.OrgUnit, { as: "parentUnit", foreignKey: "parentUnitId" })
 dm.Person .belongsTo(dm.Person,  { as: "supervisor", foreignKey: "personId"     })
 dm.Person .belongsTo(dm.OrgUnit, { as: "belongsTo",  foreignKey: "orgUnitId"    })
@@ -83,11 +86,12 @@ You then establish a GraphQL-to-Sequelize mapping like this:
 
 ```js
 import GraphQLToolsSequelize from "graphql-tools-sequelize"
+
 const gts = new GraphQLToolsSequelize(db)
 await gts.boot()
 ```
 
-Now you can use it to conveniently create a GraphQL schema
+Now you can use this mapping to conveniently create a GraphQL schema
 definition as the interface for operating on your domain model:
 
 ```js
@@ -134,6 +138,7 @@ You also use it to define the corresponding GraphQL resolver functions:
 
 ```js
 import GraphQLToolsTypes from "graphql-tools-types"
+
 const resolvers = {
     UUID: GraphQLToolsTypes.UUID({ name: "UUID", storage: "string" }),
     JSON: GraphQLToolsTypes.JSON({ name: "JSON" }),
@@ -167,17 +172,19 @@ Then you use the schema definition and resolver functions to generate an executa
 
 ```js
 import * as GraphQLTools from "graphql-tools"
+
 const schema = GraphQLTools.makeExecutableSchema({
     typeDefs: [ definition ],
     resolvers: resolvers
 })
 ```
 
-Finally, you now can execute GraphQL queries:
+Finally, you now can execute GraphQL queries against your RDBMS:
 
 ```js
 const query = `query { OrgUnits { name } }`
 const variables = {}
+
 GraphQL.graphql(schema, query, null, null, variables).then((result) => {
     console.log("OK", util.inspect(result, { depth: null, colors: true }))
 }).catch((result) => {
@@ -185,8 +192,7 @@ GraphQL.graphql(schema, query, null, null, variables).then((result) => {
 })
 ```
 
-The following GraphQL mutation is a more elaborated example
-of what is possible:
+The following GraphQL mutation is a more elaborated example of what is possible:
 
 ```txt
 mutation {
@@ -233,7 +239,9 @@ mutation {
 }
 ```
 
-For more details see the [all-in-one sample](./sample/).
+For more details see the [all-in-one sample](./sample/) which even
+provides a network interface through [HAPI](http://hapijs.com/) and the
+[GraphiQL](https://github.com/graphql/graphiql) web interface on top of it.
 
 Application Programming Interface (API)
 ---------------------------------------
