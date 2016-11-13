@@ -21,7 +21,8 @@ the [GraphQL.js](https://github.com/graphql/graphql-js) wrapper
 the entities and their relationships of an underlying RDBMS through [GraphQL](http://graphql.org/).
 It provides functions for GraphQL schema definition entries and their corresponding resolver functions
 for querying and mutating entities and their relationships through GraphQL in a natural
-Object-Oriented (OO) way.
+Object-Oriented (OO) way. It optionally provides Full-Text-Search (FTS) functionality
+through [ElasticLunr](http://elasticlunr.com/) and validation, authorization and tracing hooks.
 
 Installation
 ------------
@@ -248,11 +249,11 @@ Application Programming Interface (API)
 ---------------------------------------
 
 - `import GraphQLToolsSequelize from "graphql-tools-sequelize`<br/>
-  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`:<br/>
+  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`<br/>
 
   Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
-  The `options` have to given, but can an empty objects. It can contain the following
-  entries:
+  The `options` have to given, but can be an empty object. It can contain the following
+  fields:
 
     - `validator(type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
       Optionally validate entity object `obj` (of entity type `type`)
