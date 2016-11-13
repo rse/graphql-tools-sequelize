@@ -2,7 +2,7 @@
 GraphQL-Tools-Sequelize
 ========================
 
-Integrate GraphQL-Tools and Sequelize ORM
+Integration of GraphQL-Tools and Sequelize ORM
 
 <p/>
 <img src="https://nodei.co/npm/graphql-tools-sequelize.png?downloads=true&stars=true" alt=""/>

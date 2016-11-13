@@ -1,8 +1,8 @@
 {
     "name":        "graphql-tools-sequelize",
     "version":     "0.9.7",
-    "description": "Resolver Functions for GraphQL-Tools using Sequelize ORM",
-    "keywords":    [ "graphql", "graphql-tools", "sequelize", "resolver" ],
+    "description": "Integration of GraphQL-Tools and Sequelize ORM",
+    "keywords":    [ "graphql", "graphql-tools", "sequelize", "schema", "resolver" ],
     "main":        "graphql-tools-sequelize.js5",
     "repository": {
         "type": "git",

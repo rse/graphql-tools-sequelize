@@ -1,5 +1,5 @@
 /*
-**  GraphQL-Tools-Sequelize -- Resolver Functions for GraphQL-Tools using Sequelize ORM
+**  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
 **  Copyright (c) 2016 Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
