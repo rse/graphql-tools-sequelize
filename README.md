@@ -241,7 +241,8 @@ mutation {
 
 For more details see the [all-in-one sample](./sample/) which even
 provides a network interface through [HAPI](http://hapijs.com/) and the
-[GraphiQL](https://github.com/graphql/graphiql) web interface on top of it.
+[GraphiQL](https://github.com/graphql/graphiql) web interface on top of it
+(with the help of its HAPI integration [HAPI-Plugin-GraphiQL](https://github.com/rse/hapi-plugin-graphiql)).
 
 Application Programming Interface (API)
 ---------------------------------------
