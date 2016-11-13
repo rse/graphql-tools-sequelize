@@ -2,7 +2,8 @@
 GraphQL-Tools-Sequelize
 ========================
 
-Integration of GraphQL-Tools and Sequelize ORM
+Integration of [GraphQL-Tools](https://github.com/apollostack/graphql-tools) and
+[Sequelize](http://sequelizejs.com) Object-Relational-Mapper (ORM).
 
 <p/>
 <img src="https://nodei.co/npm/graphql-tools-sequelize.png?downloads=true&stars=true" alt=""/>
