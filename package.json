@@ -21,7 +21,7 @@
     "bugs":     "https://github.com/rse/graphql-tools-sequelize/issues",
     "dependencies": {
         "bluebird":             "~3.4.6",
-        "ducky":                "~2.4.0",
+        "ducky":                "~2.5.0",
         "co":                   "~4.6.0",
         "capitalize":           "~1.0.0",
         "elasticlunr":          "~0.9.5",
