@@ -186,7 +186,7 @@ import Sequelize             from "sequelize"
     /*  GraphQL query  */
     let query = `
         mutation AddCoCWT {
-            m1: Person {
+            c1: Person {
                 create(
                     id: "acf34c80-9f83-11e6-8d46-080027e303e4",
                     with: {
@@ -195,10 +195,19 @@ import Sequelize             from "sequelize"
                         supervisor: "${pRSE.id}"
                     }
                 ) {
-                    id
+                    id, initials
                 }
             }
-            m2: OrgUnit {
+            u1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
+                update(
+                    with: {
+                        initials: "JHO1",
+                    }
+                ) {
+                    id, initials
+                }
+            }
+            c2: OrgUnit {
                 create(
                     id: "acf34c80-9f83-11e6-8d47-080027e303e4",
                     with: {
@@ -220,6 +229,20 @@ import Sequelize             from "sequelize"
                 parentUnit { id name }
                 members    { id name }
             }
+            c3: OrgUnit {
+                create(
+                    id: "3a94449a-0a50-11e7-93ae-92361f002671",
+                    with: {
+                        initials: "CoC-DT",
+                        name: "CoC Digitale Transormation",
+                        parentUnit: "${uXT.id}",
+                        director: "acf34c80-9f83-11e6-8d46-080027e303e4"
+                    }
+                ) {
+                    id name
+                }
+            }
+            d1: OrgUnit(id: "3a94449a-0a50-11e7-93ae-92361f002671") {delete}
         }
     `
 
