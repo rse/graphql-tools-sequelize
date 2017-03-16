@@ -224,7 +224,7 @@ export default class GraphQLToolsSequelize {
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
                 /*  should not happen as GraphQL does not allow an entirely empty selection  */
-                opts.attributes = [ this._sequelize.literal("1") ]
+                opts.attributes = [ "id" ]
             else
                 opts.attributes = attr
         }
