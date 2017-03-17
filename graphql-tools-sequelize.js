@@ -840,7 +840,7 @@ export default class GraphQLToolsSequelize {
             let opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            entity.update(build.attribute, opts)
+            yield (entity.update(build.attribute, opts))
 
             /*  adjust the relationships according to the request  */
             yield (this._entityUpdateFields(type, entity,
