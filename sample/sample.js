@@ -195,7 +195,7 @@ import Sequelize             from "sequelize"
                         supervisor: "${pRSE.id}"
                     }
                 ) {
-                    id
+                    id initials name
                 }
             }
             m2: OrgUnit {
@@ -208,7 +208,7 @@ import Sequelize             from "sequelize"
                         director: "acf34c80-9f83-11e6-8d46-080027e303e4"
                     }
                 ) {
-                    id name
+                    id initials name
                 }
             }
             q1: OrgUnits(where: {
@@ -219,6 +219,14 @@ import Sequelize             from "sequelize"
                 director   { id name }
                 parentUnit { id name }
                 members    { id name }
+            }
+            u1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
+                update(with: { initials: "XXX" }) {
+                    id initials name
+                }
+            }
+            d1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
+                delete
             }
         }
     `
