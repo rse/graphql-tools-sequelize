@@ -40,6 +40,8 @@ export default class GraphQLToolsSequelize {
         this._tracer     = (typeof options.tracer     === "function" ? options.tracer     : null)
         this._ftsCfg     = (typeof options.fts        === "object"   ? options.fts        : null)
         this._ftsIdx     = {}
+        this._anonCtx    = function (type) { this.__$type$ = type }
+        this._anonCtx.prototype.isType = function (type) { return this.__$type$ === type }
     }
 
     /*  bootstrap library  */
@@ -641,8 +643,11 @@ export default class GraphQLToolsSequelize {
                 if (relation === "") {
                     /*  directly  */
                     if (args.id === undefined)
-                        return this._models[target].build({})
-                    obj = yield (this._models[target].findById(args.id, opts))
+                        /*  special case: anonymous context  */
+                        return new this._anonCtx(target)
+                    else
+                        /*  regular case: non-anonymous context  */
+                        obj = yield (this._models[target].findById(args.id, opts))
                 }
                 else {
                     /*  via relation  */
@@ -678,7 +683,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "create" only allowed under "mutation" operation`)
-            if (entity.id !== undefined && entity.id !== null)
+            if (!(typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type)))
                 throw new Error(`method "create" only allowed in anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -754,7 +759,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "clone" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "clone" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -815,7 +820,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "update" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -870,7 +875,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "delete" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
             /*  check access to target  */
