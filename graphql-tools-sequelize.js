@@ -220,11 +220,11 @@ export default class GraphQLToolsSequelize {
             /*  in case no relationships should be followed at all from this entity,
                 we can load the requested attributes only. If any relationship
                 should be followed from this entity, we have to avoid
-                such an attribute filter as this means that at least "hasOne" relationships
+                such an attribute filter, as this means that at least "hasOne" relationships
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
-                /*  should not happen as GraphQL does not allow an entirely empty selection  */
-                opts.attributes = [ this._sequelize.literal("1") ]
+                /*  special case of plain method calls (neither attribute nor relationship)  */
+                opts.attributes = [ "id" ]
             else
                 opts.attributes = attr
         }
