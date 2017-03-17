@@ -362,6 +362,21 @@ export default class GraphQLToolsSequelize {
         }.bind(this))
     }
 
+    /*  map Sequelize "undefined" values to GraphQL "null" values to
+        ensure that the GraphQL engine does not complain about resolvers
+        which return "undefined" for "null" values.  */
+    _mapFieldValues (type, obj, ctx, info) {
+        /*  determine allowed fields  */
+        let allowed = this._fieldsOfGraphQLType(info, type)
+
+        /*  iterate over all GraphQL attributes  */
+        Object.keys(allowed.attribute).forEach((attribute) => {
+            /*  map Sequelize "undefined" to GraphQL "null"  */
+            if (obj[attribute] === undefined)
+                obj[attribute] = null
+        })
+    }
+
 
     /*
     **  ==== FULL-TEXT-SEARCH (FTS) SUPPORT ====
@@ -601,6 +616,11 @@ export default class GraphQLToolsSequelize {
                     return this._authorized("read", target, obj, ctx)
                 }))
 
+                /*  map field values  */
+                yield (Promise.each(objs, (obj) => {
+                    this._mapFieldValues(target, obj, ctx, info)
+                }))
+
                 /*  trace access  */
                 yield (Promise.each(objs, (obj) => {
                     return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
@@ -635,6 +655,9 @@ export default class GraphQLToolsSequelize {
                 /*  check authorization  */
                 if (!(yield (this._authorized("read", target, obj, ctx))))
                     return null
+
+                /*  map field values  */
+                this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
                 yield (this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx))
@@ -706,6 +729,9 @@ export default class GraphQLToolsSequelize {
             if (!(yield (this._authorized("read", type, obj, ctx))))
                 return null
 
+            /*  map field values  */
+            this._mapFieldValues(type, obj, ctx, info)
+
             /*  update FTS index  */
             this._ftsUpdate(type, obj.id, obj, "create")
 
@@ -764,6 +790,9 @@ export default class GraphQLToolsSequelize {
             if (!(yield (this._authorized("read", type, obj, ctx))))
                 return null
 
+            /*  map field values  */
+            this._mapFieldValues(type, obj, ctx, info)
+
             /*  update FTS index  */
             this._ftsUpdate(type, obj.id, obj, "create")
 
@@ -815,6 +844,9 @@ export default class GraphQLToolsSequelize {
             /*  check access to entity again  */
             if (!(yield (this._authorized("read", type, entity, ctx))))
                 return null
+
+            /*  map field values  */
+            this._mapFieldValues(type, entity, ctx, info)
 
             /*  update FTS index  */
             this._ftsUpdate(type, entity.id, entity, "update")
