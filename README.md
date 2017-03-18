@@ -237,6 +237,17 @@ mutation {
             members    { initials name }
         }
     }
+    m3: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
+        update(with: { initials: "XXX" }) {
+            id initials name
+        }
+    }
+    m4: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
+        delete
+    }
+    q2: Persons {
+        id initials name
+    }
 }
 ```
 
