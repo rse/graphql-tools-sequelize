@@ -268,7 +268,7 @@ provides a network interface through [HAPI](http://hapijs.com/) and the
 Application Programming Interface (API)
 ---------------------------------------
 
-- `import GraphQLToolsSequelize from "graphql-tools-sequelize`<br/>
+- `import GraphQLToolsSequelize from "graphql-tools-sequelize"`<br/>
   `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`<br/>
 
   Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
