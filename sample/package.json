@@ -15,7 +15,7 @@
         "boom":                    "~4.2.0",
         "graphql":                 "~0.9.1",
         "graphql-tools":           "~0.10.1",
-        "graphql-tools-types":     "~1.0.3",
+        "graphql-tools-types":     "~1.0.4",
         "graphql-tools-sequelize": "..",
         "sequelize":               "~3.30.2",
         "sqlite3":                 "~3.1.8"
