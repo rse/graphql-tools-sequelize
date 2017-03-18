@@ -315,14 +315,14 @@ Application Programming Interface (API)
 
     - empty `relation` and `target` cardinality 0..1:<br/>
 
-    ```js
+        ```js
 `# Query one [${target}]() entity by its unique id.\n` +
 `${target}(id: String): ${target}\n`
-      ```
+        ```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
 
-      ```js
+        ```js
 `# Query one or many [${target}]() entities,\n` +
 `# by either an (optionally available) full-text-search (\`query\`)\n` +
 `# or an (always available) attribute-based condition (\`where\`),\n` +
@@ -330,23 +330,23 @@ Application Programming Interface (API)
 `# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
 `# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
 `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
-      ```
+        ```
 
     - non-empty `relation` and `target` cardinality 0..1:<br/>
 
-      ```js
+        ```js
 `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
 `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
 `${relation}(where: JSON): ${target}\n`
-      ```
+        ```
 
     - non-empty `relation` and `target` cardinality 0..N:<br/>
 
-      ```js
+        ```js
 `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
 `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
 `${relation}(where: JSON): ${target}\n`
-      ```
+        ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
@@ -362,31 +362,31 @@ Application Programming Interface (API)
 
     - For `entityCreate{Schema,Resolver}(type)`:<br/>
 
-      ```js
+        ```js
 `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
 `create(id: UUID, with: JSON): ${type}!\n`
-      ```
+        ```
 
     - For `entityClone{Schema,Resolver}(type)`:<br/>
 
-      ```js
+        ```js
 `# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
 `clone: ${type}!\n`
-      ```
+        ```
 
     - For `entityUpdate{Schema,Resolver}(type)`:<br/>
 
-      ```js
+        ```js
 `# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
 `update(with: JSON!): ${type}!\n`
-      ```
+        ```
 
     - For `entityDelete{Schema,Resolver}(type)`:<br/>
 
-      ```js
+        ```js
 `# Delete one [${type}]() entity.\n` +
 `delete: UUID!\n`
-      ```
+        ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
