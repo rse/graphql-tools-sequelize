@@ -576,8 +576,8 @@ export default class GraphQLToolsSequelize {
             if (relation === "")
                 /*  directly  */
                 return `` +
-                    `# Query one [${target}]() entity by its unique id.\n` +
-                    `${target}(id: String): ${target}\n`
+                    `# Query one [${target}]() entity by its unique id or open an anonymous context for [${target}].\n` +
+                    `${target}(id: UUID): ${target}\n`
             else
                 /*  via relation  */
                 return `` +
