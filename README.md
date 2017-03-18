@@ -315,10 +315,10 @@ Application Programming Interface (API)
 
     - empty `relation` and `target` cardinality 0..1:<br/>
 
-        ```js
+```js
 `# Query one [${target}]() entity by its unique id.\n` +
 `${target}(id: String): ${target}\n`
-        ```
+```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
 
