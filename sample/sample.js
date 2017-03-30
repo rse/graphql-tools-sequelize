@@ -225,6 +225,11 @@ import Sequelize             from "sequelize"
                     id initials name
                 }
             }
+            clone1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
+                clone {
+                    id initials name
+                }
+            }
             d1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
                 delete
             }
