@@ -780,7 +780,7 @@ export default class GraphQLToolsSequelize {
             data.id = (new UUID(1)).format()
             Object.keys(defined.attribute).forEach((attr) => {
                 if (attr !== "id")
-                    data[attr] = parent[attr]
+                    data[attr] = entity[attr]
             })
             let obj = this._models[type].build(data)
 
