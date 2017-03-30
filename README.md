@@ -23,14 +23,19 @@ It provides functions for GraphQL schema definition entries and their correspond
 for querying and mutating entities and their relationships through GraphQL in a natural
 Object-Oriented (OO) way. It optionally provides Full-Text-Search (FTS) functionality
 through [ElasticLunr](http://elasticlunr.com/) and validation, authorization and tracing hooks.
+It provides an elaborate CRUD (Create, Read, Update, Delete) functionality for the entities and
+their relationships.
 
 Installation
 ------------
 
 ```shell
 $ npm install \
-  graphql graphql-tools graphql-tools-types \
-  graphql-tools-sequelize sequelize \
+  graphql \
+  graphql-tools \
+  graphql-tools-types \
+  graphql-tools-sequelize \
+  sequelize \
   --save-dev
 ```
 
@@ -92,8 +97,9 @@ const gts = new GraphQLToolsSequelize(db)
 await gts.boot()
 ```
 
-Now you can use this mapping to conveniently create a GraphQL schema
-definition as the interface for operating on your domain model:
+Now you can use this mapping and its factory functions to conveniently
+create a GraphQL schema definition as the interface for operating on
+your domain model:
 
 ```js
 const definition = `
@@ -135,7 +141,8 @@ const definition = `
 `
 ```
 
-You also use it to define the corresponding GraphQL resolver functions:
+You also use it and its factory functions to define the corresponding
+GraphQL resolver functions:
 
 ```js
 import GraphQLToolsTypes from "graphql-tools-types"
@@ -169,7 +176,8 @@ const resolvers = {
 }
 ```
 
-Then you use the schema definition and resolver functions to generate an executable GraphQL schema:
+Then you use the established schema definition and resolver functions to
+generate an executable GraphQL schema:
 
 ```js
 import * as GraphQLTools from "graphql-tools"
@@ -193,7 +201,8 @@ GraphQL.graphql(schema, query, null, null, variables).then((result) => {
 })
 ```
 
-The following GraphQL mutation is a more elaborated example of what is possible:
+The following GraphQL mutation is a more elaborated example of how
+CRUD operations looks like and what is possible:
 
 ```txt
 mutation {
@@ -237,6 +246,17 @@ mutation {
             members    { initials name }
         }
     }
+    m3: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
+        update(with: { initials: "XXX" }) {
+            id initials name
+        }
+    }
+    m4: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
+        delete
+    }
+    q2: Persons {
+        id initials name
+    }
 }
 ```
 
@@ -248,7 +268,7 @@ provides a network interface through [HAPI](http://hapijs.com/) and the
 Application Programming Interface (API)
 ---------------------------------------
 
-- `import GraphQLToolsSequelize from "graphql-tools-sequelize`<br/>
+- `import GraphQLToolsSequelize from "graphql-tools-sequelize"`<br/>
   `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`<br/>
 
   Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
@@ -295,38 +315,38 @@ Application Programming Interface (API)
 
     - empty `relation` and `target` cardinality 0..1:<br/>
 
-    ```js
-`# Query one [${target}]() entity by its unique id.\n` +
-`${target}(id: String): ${target}\n`
-      ```
+        ```js
+        `# Query one [${target}]() entity by its unique id.\n` +
+        `${target}(id: String): ${target}\n`
+        ```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
 
-      ```js
-`# Query one or many [${target}]() entities,\n` +
-`# by either an (optionally available) full-text-search (\`query\`)\n` +
-`# or an (always available) attribute-based condition (\`where\`),\n` +
-`# optionally sort them (\`order\`),\n` +
-`# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
-`# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
-`${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
-      ```
+        ```js
+        `# Query one or many [${target}]() entities,\n` +
+        `# by either an (optionally available) full-text-search (\`query\`)\n` +
+        `# or an (always available) attribute-based condition (\`where\`),\n` +
+        `# optionally sort them (\`order\`),\n` +
+        `# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
+        `# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
+        `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+        ```
 
     - non-empty `relation` and `target` cardinality 0..1:<br/>
 
-      ```js
-`# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
-`# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-`${relation}(where: JSON): ${target}\n`
-      ```
+        ```js
+        `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+        `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
+        `${relation}(where: JSON): ${target}\n`
+        ```
 
     - non-empty `relation` and `target` cardinality 0..N:<br/>
 
-      ```js
-`# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
-`# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-`${relation}(where: JSON): ${target}\n`
-      ```
+        ```js
+        `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+        `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
+        `${relation}(where: JSON): ${target}\n`
+        ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
@@ -342,31 +362,31 @@ Application Programming Interface (API)
 
     - For `entityCreate{Schema,Resolver}(type)`:<br/>
 
-      ```js
-`# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-`create(id: UUID, with: JSON): ${type}!\n`
-      ```
+        ```js
+        `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
+        `create(id: UUID, with: JSON): ${type}!\n`
+        ```
 
     - For `entityClone{Schema,Resolver}(type)`:<br/>
 
-      ```js
-`# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
-`clone: ${type}!\n`
-      ```
+        ```js
+        `# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
+        `clone: ${type}!\n`
+        ```
 
     - For `entityUpdate{Schema,Resolver}(type)`:<br/>
 
-      ```js
-`# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
-`update(with: JSON!): ${type}!\n`
-      ```
+        ```js
+        `# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
+        `update(with: JSON!): ${type}!\n`
+        ```
 
     - For `entityDelete{Schema,Resolver}(type)`:<br/>
 
-      ```js
-`# Delete one [${type}]() entity.\n` +
-`delete: UUID!\n`
-      ```
+        ```js
+        `# Delete one [${type}]() entity.\n` +
+        `delete: UUID!\n`
+        ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
@@ -383,7 +403,7 @@ you define the GraphQL scalar types `UUID` and `JSON` with the help of
 License
 -------
 
-Copyright (c) 2016 Ralf S. Engelschall (http://engelschall.com/)
+Copyright (c) 2016-2017 Ralf S. Engelschall (http://engelschall.com/)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

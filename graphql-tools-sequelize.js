@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -40,6 +40,8 @@ export default class GraphQLToolsSequelize {
         this._tracer     = (typeof options.tracer     === "function" ? options.tracer     : null)
         this._ftsCfg     = (typeof options.fts        === "object"   ? options.fts        : null)
         this._ftsIdx     = {}
+        this._anonCtx    = function (type) { this.__$type$ = type }
+        this._anonCtx.prototype.isType = function (type) { return this.__$type$ === type }
     }
 
     /*  bootstrap library  */
@@ -214,17 +216,20 @@ export default class GraphQLToolsSequelize {
         /*  determine Sequelize "attributes" parameter  */
         let fieldInfo = this._graphqlRequestedFields(info)
         let fields = Object.keys(fieldInfo)
+        let meth = fields.filter((field) => allowed.method[field])
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
-        if (rels.length === 0) {
+        if (   meth.length === 0
+            && rels.length === 0
+            && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,
                 we can load the requested attributes only. If any relationship
                 should be followed from this entity, we have to avoid
-                such an attribute filter as this means that at least "hasOne" relationships
+                such an attribute filter, as this means that at least "hasOne" relationships
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
-                /*  should not happen as GraphQL does not allow an entirely empty selection  */
-                opts.attributes = [ this._sequelize.literal("1") ]
+                /*  special case of plain method calls (neither attribute nor relationship)  */
+                opts.attributes = [ "id" ]
             else
                 opts.attributes = attr
         }
@@ -271,17 +276,20 @@ export default class GraphQLToolsSequelize {
         /*  determine Sequelize "attributes" parameter  */
         let fieldInfo = this._graphqlRequestedFields(info)
         let fields = Object.keys(fieldInfo)
+        let meth = fields.filter((field) => allowed.method[field])
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
-        if (rels.length === 0) {
+        if (   meth.length === 0
+            && rels.length === 0
+            && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,
                 we can load the requested attributes only. If any relationship
                 should be followed from this entity, we have to avoid
-                such an attribute filter as this means that at least "hasOne" relationships
+                such an attribute filter, as this means that at least "hasOne" relationships
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
                 /*  should not happen as GraphQL does not allow an entirely empty selection  */
-                opts.attributes = [ this._sequelize.literal("1") ]
+                opts.attributes = [ "id" ]
             else
                 opts.attributes = attr
         }
@@ -360,6 +368,21 @@ export default class GraphQLToolsSequelize {
                 if (value.add) yield (changeRelation("add",    value.add))
             }
         }.bind(this))
+    }
+
+    /*  map Sequelize "undefined" values to GraphQL "null" values to
+        ensure that the GraphQL engine does not complain about resolvers
+        which return "undefined" for "null" values.  */
+    _mapFieldValues (type, obj, ctx, info) {
+        /*  determine allowed fields  */
+        let allowed = this._fieldsOfGraphQLType(info, type)
+
+        /*  iterate over all GraphQL attributes  */
+        Object.keys(allowed.attribute).forEach((attribute) => {
+            /*  map Sequelize "undefined" to GraphQL "null"  */
+            if (obj[attribute] === undefined)
+                obj[attribute] = null
+        })
     }
 
 
@@ -553,8 +576,8 @@ export default class GraphQLToolsSequelize {
             if (relation === "")
                 /*  directly  */
                 return `` +
-                    `# Query one [${target}]() entity by its unique id.\n` +
-                    `${target}(id: String): ${target}\n`
+                    `# Query one [${target}]() entity by its unique id or open an anonymous context for [${target}].\n` +
+                    `${target}(id: UUID): ${target}\n`
             else
                 /*  via relation  */
                 return `` +
@@ -601,6 +624,11 @@ export default class GraphQLToolsSequelize {
                     return this._authorized("read", target, obj, ctx)
                 }))
 
+                /*  map field values  */
+                yield (Promise.each(objs, (obj) => {
+                    this._mapFieldValues(target, obj, ctx, info)
+                }))
+
                 /*  trace access  */
                 yield (Promise.each(objs, (obj) => {
                     return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
@@ -621,8 +649,11 @@ export default class GraphQLToolsSequelize {
                 if (relation === "") {
                     /*  directly  */
                     if (args.id === undefined)
-                        return this._models[target].build({})
-                    obj = yield (this._models[target].findById(args.id, opts))
+                        /*  special case: anonymous context  */
+                        return new this._anonCtx(target)
+                    else
+                        /*  regular case: non-anonymous context  */
+                        obj = yield (this._models[target].findById(args.id, opts))
                 }
                 else {
                     /*  via relation  */
@@ -635,6 +666,9 @@ export default class GraphQLToolsSequelize {
                 /*  check authorization  */
                 if (!(yield (this._authorized("read", target, obj, ctx))))
                     return null
+
+                /*  map field values  */
+                this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
                 yield (this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx))
@@ -655,7 +689,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "create" only allowed under "mutation" operation`)
-            if (entity.id !== undefined && entity.id !== null)
+            if (!(typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type)))
                 throw new Error(`method "create" only allowed in anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -706,6 +740,9 @@ export default class GraphQLToolsSequelize {
             if (!(yield (this._authorized("read", type, obj, ctx))))
                 return null
 
+            /*  map field values  */
+            this._mapFieldValues(type, obj, ctx, info)
+
             /*  update FTS index  */
             this._ftsUpdate(type, obj.id, obj, "create")
 
@@ -728,7 +765,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "clone" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "clone" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -764,6 +801,9 @@ export default class GraphQLToolsSequelize {
             if (!(yield (this._authorized("read", type, obj, ctx))))
                 return null
 
+            /*  map field values  */
+            this._mapFieldValues(type, obj, ctx, info)
+
             /*  update FTS index  */
             this._ftsUpdate(type, obj.id, obj, "create")
 
@@ -786,7 +826,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "update" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
@@ -806,7 +846,7 @@ export default class GraphQLToolsSequelize {
             let opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            entity.update(build.attribute, opts)
+            yield (entity.update(build.attribute, opts))
 
             /*  adjust the relationships according to the request  */
             yield (this._entityUpdateFields(type, entity,
@@ -815,6 +855,9 @@ export default class GraphQLToolsSequelize {
             /*  check access to entity again  */
             if (!(yield (this._authorized("read", type, entity, ctx))))
                 return null
+
+            /*  map field values  */
+            this._mapFieldValues(type, entity, ctx, info)
 
             /*  update FTS index  */
             this._ftsUpdate(type, entity.id, entity, "update")
@@ -838,7 +881,7 @@ export default class GraphQLToolsSequelize {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error(`method "delete" only allowed under "mutation" operation`)
-            if (entity.id === undefined || entity.id === null)
+            if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
             /*  check access to target  */
