@@ -173,9 +173,11 @@ export default class GraphQLToolsSequelize {
                     while (typeof type.ofType === "object")
                         type = type.ofType
                     if (   type.constructor.name === "GraphQLScalarType"
-                        && typeof type.parseValue === "function"        )
+                        && typeof type.parseValue === "function"
+                        && value !== null)
                         value = type.parseValue(value)
-                    else if (type.constructor.name === "GraphQLEnumType") {
+                    else if (   type.constructor.name === "GraphQLEnumType"
+                             && value !== null) {
                         if (typeof value !== "string")
                             throw new Error(`invalid value type (expected string) for ` +
                                 `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
