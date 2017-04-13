@@ -35,6 +35,8 @@ export default class GraphQLToolsSequelize {
     constructor (sequelize, options = {}) {
         this._sequelize  = sequelize
         this._models     = sequelize.models
+        this._idtype     = (typeof options.idtype     === "string"   ? options.idtype     : "UUID")
+        this._idmake     = (typeof options.idmake     === "function" ? options.idmake     : () => (new UUID(1)).format())
         this._validator  = (typeof options.validator  === "function" ? options.validator  : null)
         this._authorizer = (typeof options.authorizer === "function" ? options.authorizer : null)
         this._tracer     = (typeof options.tracer     === "function" ? options.tracer     : null)
@@ -579,7 +581,7 @@ export default class GraphQLToolsSequelize {
                 /*  directly  */
                 return `` +
                     `# Query one [${target}]() entity by its unique id or open an anonymous context for [${target}].\n` +
-                    `${target}(id: UUID): ${target}\n`
+                    `${target}(id: ${this._idtype}): ${target}\n`
             else
                 /*  via relation  */
                 return `` +
@@ -684,7 +686,7 @@ export default class GraphQLToolsSequelize {
     entityCreateSchema (type) {
         return `` +
             `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-            `create(id: UUID, with: JSON): ${type}!\n`
+            `create(id: ${this._idtype}, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
         return co.wrap(function * (entity, args, ctx, info) {
@@ -703,7 +705,7 @@ export default class GraphQLToolsSequelize {
             /*  handle unique id  */
             if (args.id === undefined)
                 /*  auto-generate the id  */
-                build.attribute.id = (new UUID(1)).format()
+                build.attribute.id = this._idmake()
             else {
                 /*  take over id, but ensure it is unique  */
                 build.attribute.id = args.id
@@ -779,7 +781,7 @@ export default class GraphQLToolsSequelize {
 
             /*  build a new entity  */
             let data = {}
-            data.id = (new UUID(1)).format()
+            data.id = this._idmake()
             Object.keys(defined.attribute).forEach((attr) => {
                 if (attr !== "id")
                     data[attr] = entity[attr]
@@ -876,7 +878,7 @@ export default class GraphQLToolsSequelize {
     entityDeleteSchema (type) {
         return `` +
             `# Delete one [${type}]() entity.\n` +
-            `delete: UUID!\n`
+            `delete: ${this._idtype}!\n`
     }
     entityDeleteResolver (type) {
         return co.wrap(function * (entity, args, ctx, info) {
