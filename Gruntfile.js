@@ -24,12 +24,11 @@
 
 /* global module: true */
 module.exports = function (grunt) {
-    grunt.loadNpmTasks("grunt-contrib-clean");
-    grunt.loadNpmTasks("grunt-contrib-watch");
-    grunt.loadNpmTasks("grunt-babel");
-    grunt.loadNpmTasks("grunt-mocha-test");
-    grunt.loadNpmTasks("grunt-eslint");
-
+    grunt.loadNpmTasks("grunt-eslint")
+    grunt.loadNpmTasks("grunt-babel")
+    grunt.loadNpmTasks("grunt-mocha-test")
+    grunt.loadNpmTasks("grunt-contrib-clean")
+    grunt.loadNpmTasks("grunt-contrib-watch")
     grunt.initConfig({
         eslint: {
             options: {
@@ -91,10 +90,9 @@ module.exports = function (grunt) {
                 options: {}
             }
         }
-    });
-
-    grunt.registerTask("default", [ "eslint", "babel", "mochaTest" ]);
-    grunt.registerTask("test", [ "mochaTest" ]);
-    grunt.registerTask("dev", [ "default", "watch" ]);
-};
+    })
+    grunt.registerTask("default", [ "eslint", "babel" ])
+    grunt.registerTask("test", [ "mochaTest" ])
+    grunt.registerTask("dev", [ "default", "watch" ])
+}
 
