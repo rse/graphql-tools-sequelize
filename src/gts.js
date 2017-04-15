@@ -42,8 +42,16 @@ import gtsEntityDelete         from "./gts-B-entity-delete"
 /*  the API class  */
 class GraphQLToolsSequelize extends aggregation(
     gtsVersion,
-    gtsUtilHook, gtsUtilGraphQL, gtsUtilSequelizeOptions, gtsUtilSequelizeFields, gtsUtilFTS,
-    gtsEntityQuery, gtsEntityCreate, gtsEntityClone, gtsEntityUpdate, gtsEntityDelete
+    gtsUtilHook,
+    gtsUtilGraphQL,
+    gtsUtilSequelizeOptions,
+    gtsUtilSequelizeFields,
+    gtsUtilFTS,
+    gtsEntityQuery,
+    gtsEntityCreate,
+    gtsEntityClone,
+    gtsEntityUpdate,
+    gtsEntityDelete
 ) {
     constructor (sequelize, options = {}) {
         super(sequelize, options)
