@@ -22,9 +22,6 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import Promise from "bluebird"
-
 /*  the mixin class  */
 export default class gtsUtilHook {
     /*  initialize the mixin  */
