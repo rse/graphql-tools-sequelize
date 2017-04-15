@@ -22,7 +22,7 @@
         "capitalize":                                "~1.0.0",
         "elasticlunr":                               "~0.9.5",
         "pure-uuid":                                 "~1.4.5",
-        "aggregation":                               "~1.0.0",
+        "aggregation":                               "~1.2.0",
         "babel-runtime":                             "~6.23.0"
     },
     "devDependencies": {

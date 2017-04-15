@@ -24,7 +24,7 @@
 
 /*  external dependencies  */
 import UUID                    from "pure-uuid"
-import aggregation             from "aggregation/es5"
+import aggregation             from "aggregation/es6"
 
 /*  internal dependencies  */
 import gtsVersion              from "./gts-1-version"
