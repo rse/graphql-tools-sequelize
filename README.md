@@ -54,6 +54,7 @@ entities `OrgUnit` and `Person` and some relationships between them
  |   +-----------+           +-----------+   |
  +---| OrgUnit   |  belongsTo| Person    |---+
      |-----------|<----------|-----------|
+     | id        |           | id        |
      | initials  |--------->*| initials  |
      | name      |  members  | name      |
      +-----------+           +-----------+
@@ -67,7 +68,7 @@ With Sequelize ORM this could be defined on the RDBMS level as:
 ```js
 import Sequelize from "sequelize"
 
-const db = new Sequelize([...])
+const db = new Sequelize(...)
 const dm = {}
 
 dm.OrgUnit = db.define("OrgUnit", {
@@ -80,7 +81,6 @@ dm.Person = db.define("Person", {
     initials:   { type: Sequelize.STRING(3),   allowNull:  false },
     name:       { type: Sequelize.STRING(100), allowNull:  false }
 })
-
 dm.OrgUnit.belongsTo(dm.OrgUnit, { as: "parentUnit", foreignKey: "parentUnitId" })
 dm.Person .belongsTo(dm.Person,  { as: "supervisor", foreignKey: "personId"     })
 dm.Person .belongsTo(dm.OrgUnit, { as: "belongsTo",  foreignKey: "orgUnitId"    })
@@ -177,7 +177,7 @@ const resolvers = {
 ```
 
 Then you use the established schema definition and resolver functions to
-generate an executable GraphQL schema:
+generate an executable GraphQL schema with the help of GraphQL-Tools:
 
 ```js
 import * as GraphQLTools from "graphql-tools"
@@ -201,8 +201,8 @@ GraphQL.graphql(schema, query, null, null, variables).then((result) => {
 })
 ```
 
-The following GraphQL mutation is a more elaborated example of how
-CRUD operations looks like and what is possible:
+The following GraphQL mutation is a more elaborate example of how
+CRUD operations look like and what is possible:
 
 ```txt
 mutation {
@@ -251,6 +251,11 @@ mutation {
             id initials name
         }
     }
+    c1: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
+        clone {
+            id initials name
+        }
+    }
     m4: Person(id: "c9965340-a6c8-11e6-ac95-080027e303e4") {
         delete
     }
@@ -260,7 +265,7 @@ mutation {
 }
 ```
 
-For more details see the [all-in-one sample](./sample/) which even
+For more details, see the [all-in-one sample](./sample/), which even
 provides a network interface through [HAPI](http://hapijs.com/) and the
 [GraphiQL](https://github.com/graphql/graphiql) web interface on top of it
 (with the help of its HAPI integration [HAPI-Plugin-GraphiQL](https://github.com/rse/hapi-plugin-graphiql)).
