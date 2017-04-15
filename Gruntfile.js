@@ -24,13 +24,11 @@
 
 /* global module: true */
 module.exports = function (grunt) {
-    grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-browserify");
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-eslint");
-    grunt.loadNpmTasks("grunt-jscs");
 
     grunt.initConfig({
         version: grunt.file.readYAML("VERSION.yml"),

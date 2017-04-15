@@ -28,12 +28,10 @@
     "devDependencies": {
         "grunt":                                     "~1.0.1",
         "grunt-cli":                                 "~1.2.0",
-        "grunt-contrib-jshint":                      "~1.1.0",
         "grunt-contrib-clean":                       "~1.1.0",
         "grunt-contrib-watch":                       "~1.0.0",
         "grunt-browserify":                          "~5.0.0",
         "grunt-mocha-test":                          "~0.13.2",
-        "grunt-jscs":                                "~3.0.1",
         "grunt-eslint":                              "~19.0.0",
         "babel-eslint":                              "~7.2.2",
         "eslint":                                    "~3.19.0",
