@@ -612,10 +612,10 @@ export default class GraphQLToolsSequelize {
                     /*  directly  */
                     if (args.fts !== undefined)
                         /*  directly, via FTS index  */
-                        objs = yield(this._ftsSearch(target, args.fts, args.order, args.offset, args.limit, ctx))
+                        objs = yield (this._ftsSearch(target, args.fts, args.order, args.offset, args.limit, ctx))
                     else
                         /*  directly, via database  */
-                        objs = yield(this._models[target].findAll(opts))
+                        objs = yield (this._models[target].findAll(opts))
                 }
                 else {
                     /*  via relation  */
