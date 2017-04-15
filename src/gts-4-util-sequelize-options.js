@@ -42,12 +42,12 @@ export default class gtsUtilSequelizeOptions {
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
-                throw new Error(`invalid "where" argument`)
+                throw new Error("invalid \"where\" argument (object expected)")
             opts.where = args.where
             opts.where = {}
             Object.keys(args.where).forEach((field) => {
                 if (!allowed.attribute[field])
-                    throw new Error(`invalid "where" argument: ` +
+                    throw new Error("invalid \"where\" argument: " +
                         `no such field "${field}" on type "${entity}"`)
                 opts.where[field] = args.where[field]
             })
@@ -87,12 +87,12 @@ export default class gtsUtilSequelizeOptions {
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
-                throw new Error(`invalid "where" argument`)
+                throw new Error("invalid \"where\" argument (object expected)")
             opts.where = args.where
             opts.where = {}
             Object.keys(args.where).forEach((field) => {
                 if (!allowed.attribute[field])
-                    throw new Error(`invalid "where" argument: ` +
+                    throw new Error("invalid \"where\" argument: " +
                         `no such field "${field}" on type "${entity}"`)
                 opts.where[field] = args.where[field]
             })
@@ -108,8 +108,8 @@ export default class gtsUtilSequelizeOptions {
 
         /*  determine Sequelize "order" parameter  */
         if (args.order  !== undefined) {
-            if (!Ducky.validate(args.order, `( string | [ (string | [ string, string ])+ ])`))
-                throw new Error(`invalid "order" argument: wrong structure`)
+            if (!Ducky.validate(args.order, "( string | [ (string | [ string, string ])+ ])"))
+                throw new Error("invalid \"order\" argument: wrong structure")
             opts.order = args.order
         }
 

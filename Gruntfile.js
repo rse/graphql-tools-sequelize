@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         version: grunt.file.readYAML("VERSION.yml"),
         eslint: {
             options: {
-                configFile: "eslint.json"
+                configFile: "eslint.yaml"
             },
             "graphql-tools-sequelize": [ "src/**/*.js", "tst/**/*.js" ]
         },

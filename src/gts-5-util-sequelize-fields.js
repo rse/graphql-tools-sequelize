@@ -65,7 +65,7 @@ export default class gtsUtilSequelizeFields {
                     /*  sanity check requested ids  */
                     if (objs.length < ids.length) {
                         let found = {}
-                        objs.forEach((obj) => found[obj.id] = true)
+                        objs.forEach((obj) => { found[obj.id] = true })
                         for (let j = 0; j < ids.length; j++)
                             if (!found[ids[j]])
                                 throw new Error(`no such entity ${target}#${ids[j]} found`)
@@ -74,14 +74,14 @@ export default class gtsUtilSequelizeFields {
                     /*  sanity check usage  */
                     if (!many && ids.length > 1)
                         throw new Error(`relationship ${name} on type ${type} has cardinality 0..1 ` +
-                            `and cannot receive more than one foreign entity`)
+                            "and cannot receive more than one foreign entity")
 
                     /*  change relationship  */
                     if (many) {
                         /*  change relationship of cardinality 0..N  */
                         let method = `${prefix}${capitalize(name)}`
                         if (typeof obj[method] !== "function")
-                            throw new Error(`relationship mutation method not found ` +
+                            throw new Error("relationship mutation method not found " +
                                 `to ${prefix} relation ${name} on type ${type}`)
                         yield (obj[method](objs, opts))
                     }
@@ -91,7 +91,7 @@ export default class gtsUtilSequelizeFields {
                             prefix = "set"
                         let method = `${prefix}${capitalize(name)}`
                         if (typeof obj[method] !== "function")
-                            throw new Error(`relationship mutation method not found ` +
+                            throw new Error("relationship mutation method not found " +
                                 `to ${prefix} relation ${name} on type ${type}`)
                         yield (obj[method](prefix !== "remove" ? objs[0] : null, opts))
                     }

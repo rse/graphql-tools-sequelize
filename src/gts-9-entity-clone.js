@@ -34,7 +34,7 @@ export default class gtsEntityClone {
 
     /*  API: clone an entity (without relationships)  */
     entityCloneSchema (type) {
-        return `` +
+        return "" +
             `# Clone one [${type}]() entity by cloning its attributes (but not its relationships).\n` +
             `clone: ${type}!\n`
     }
@@ -42,7 +42,7 @@ export default class gtsEntityClone {
         return co.wrap(function * (entity, args, ctx, info) {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
-                throw new Error(`method "clone" only allowed under "mutation" operation`)
+                throw new Error("method \"clone\" only allowed under \"mutation\" operation")
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "clone" only allowed in non-anonymous ${type} context`)
 

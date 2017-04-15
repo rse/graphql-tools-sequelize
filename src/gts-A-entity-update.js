@@ -34,7 +34,7 @@ export default class gtsEntityUpdate {
 
     /*  API: update an entity  */
     entityUpdateSchema (type) {
-        return `` +
+        return "" +
             `# Update one [${type}]() entity with specified attributes (\`with\`).\n` +
             `update(with: JSON!): ${type}!\n`
     }
@@ -42,7 +42,7 @@ export default class gtsEntityUpdate {
         return co.wrap(function * (entity, args, ctx, info) {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
-                throw new Error(`method "update" only allowed under "mutation" operation`)
+                throw new Error("method \"update\" only allowed under \"mutation\" operation")
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 

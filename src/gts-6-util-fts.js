@@ -105,7 +105,7 @@ export default class gtsUtilFTS {
     _ftsSearch (type, query, order, offset, limit, ctx) {
         /*  operate only if FTS is configured  */
         if (this._ftsCfg === null)
-            return new Error(`Full-Text-Search (FTS) not available at all`)
+            return new Error("Full-Text-Search (FTS) not available at all")
         if (this._ftsCfg[type] === undefined)
             return new Error(`Full-Text-Search (FTS) not available for entity "${type}"`)
 
@@ -117,8 +117,10 @@ export default class gtsUtilFTS {
                 let fn = "__any"
                 let kw = field
                 let m
-                if ((m = field.match(/^(.+):(.+)$/)) !== null)
-                    fn = m[1], kw = m[2]
+                if ((m = field.match(/^(.+):(.+)$/)) !== null) {
+                    fn = m[1]
+                    kw = m[2]
+                }
                 if (fn !== "__any" && this._ftsCfg[type].indexOf(fn) < 0)
                     throw new Error(`Full-Text-Search (FTS) not available for field "${fn}" of entity "${type}"`)
                 if (fields[fn] === undefined)

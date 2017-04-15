@@ -34,7 +34,7 @@ export default class gtsEntityCreate {
 
     /*  API: create a new entity  */
     entityCreateSchema (type) {
-        return `` +
+        return "" +
             `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
             `create(id: ${this._idtype}, with: JSON): ${type}!\n`
     }
@@ -42,7 +42,7 @@ export default class gtsEntityCreate {
         return co.wrap(function * (entity, args, ctx, info) {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
-                throw new Error(`method "create" only allowed under "mutation" operation`)
+                throw new Error("method \"create\" only allowed under \"mutation\" operation")
             if (!(typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type)))
                 throw new Error(`method "create" only allowed in anonymous ${type} context`)
 

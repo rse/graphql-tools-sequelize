@@ -73,6 +73,5 @@ export default class gtsUtilHook {
             result = Promise.resolve(result)
         return result
     }
-
 }
 

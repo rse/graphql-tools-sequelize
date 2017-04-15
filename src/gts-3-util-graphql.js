@@ -116,10 +116,10 @@ export default class gtsUtilGraphQL {
                     else if (   type.constructor.name === "GraphQLEnumType"
                              && value !== null) {
                         if (typeof value !== "string")
-                            throw new Error(`invalid value type (expected string) for ` +
+                            throw new Error("invalid value type (expected string) for " +
                                 `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
                         if (type._enumConfig.values[value] === undefined)
-                            throw new Error(`invalid value for ` +
+                            throw new Error("invalid value for " +
                                 `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
                     }
                     fields.attribute[name] = value

@@ -34,7 +34,7 @@ export default class gtsEntityDelete {
 
     /*  API: delete an entity  */
     entityDeleteSchema (type) {
-        return `` +
+        return "" +
             `# Delete one [${type}]() entity.\n` +
             `delete: ${this._idtype}!\n`
     }
@@ -42,7 +42,7 @@ export default class gtsEntityDelete {
         return co.wrap(function * (entity, args, ctx, info) {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
-                throw new Error(`method "delete" only allowed under "mutation" operation`)
+                throw new Error("method \"delete\" only allowed under \"mutation\" operation")
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
