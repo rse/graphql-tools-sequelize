@@ -53,7 +53,19 @@ module.exports = function (grunt) {
                             { from: /\$micro/g, to: "<%= version.micro %>" },
                             { from: /\$date/g,  to: "<%= version.date  %>" }
                         ]}],
-                        [ "babelify", { presets: [ "es2015", "es2016", "es2017", "stage-3", "stage-2" ] } ]
+                        [ "babelify", {
+                            presets: [
+                                "es2015", "es2016", "es2017", "stage-3", "stage-2"
+                            ],
+                            plugins: [
+                                [ "transform-runtime", {
+                                    "helpers":     true,
+                                    "polyfill":    true,
+                                    "regenerator": true,
+                                    "moduleName": "babel-runtime"
+                                } ]
+                            ]
+                        } ]
                     ],
                     plugin: [
                     ],

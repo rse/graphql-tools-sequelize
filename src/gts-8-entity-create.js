@@ -22,10 +22,7 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import co from "co"
-
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsEntityCreate {
     /*  initialize the mixin  */
     initializer () {
@@ -39,7 +36,7 @@ export default class gtsEntityCreate {
             `create(id: ${this._idtype}, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
-        return co.wrap(function * (entity, args, ctx, info) {
+        return async (entity, args, ctx, info) => {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error("method \"create\" only allowed under \"mutation\" operation")
@@ -62,36 +59,36 @@ export default class gtsEntityCreate {
                 let opts = {}
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
-                let existing = yield (this._models[type].findById(build.attribute.id, opts))
+                let existing = await this._models[type].findById(build.attribute.id, opts)
                 if (existing !== null)
                     throw new Error(`entity ${type}#${build.attribute.id} already exists`)
             }
 
             /*  validate attributes  */
-            yield (this._validate(type, build.attribute, ctx))
+            await this._validate(type, build.attribute, ctx)
 
             /*  build a new entity  */
             let obj = this._models[type].build(build.attribute)
 
             /*  check access to entity  */
-            if (!(yield (this._authorized("create", type, obj, ctx))))
+            if (!(await this._authorized("create", type, obj, ctx)))
                 throw new Error(`not allowed to create entity of type "${type}"`)
 
             /*  save new entity  */
             let opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let err = yield (obj.save(opts).catch((err) => err))
+            let err = await obj.save(opts).catch((err) => err)
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))
 
             /*  post-adjust the relationships according to the request  */
-            yield (this._entityUpdateFields(type, obj,
-                defined.relation, build.relation, ctx, info))
+            await this._entityUpdateFields(type, obj,
+                defined.relation, build.relation, ctx, info)
 
             /*  check access to entity again  */
-            if (!(yield (this._authorized("read", type, obj, ctx))))
+            if (!(await this._authorized("read", type, obj, ctx)))
                 return null
 
             /*  map field values  */
@@ -101,11 +98,11 @@ export default class gtsEntityCreate {
             this._ftsUpdate(type, obj.id, obj, "create")
 
             /*  trace access  */
-            yield (this._trace(type, obj.id, obj, "create", "direct", "one", ctx))
+            await this._trace(type, obj.id, obj, "create", "direct", "one", ctx)
 
             /*  return new entity  */
             return obj
-        }.bind(this))
+        }
     }
 }
 

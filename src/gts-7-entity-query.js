@@ -23,11 +23,10 @@
 */
 
 /*  external dependencies  */
-import co         from "co"
 import Promise    from "bluebird"
 import capitalize from "capitalize"
 
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsEntityQuery {
     /*  initialize the mixin  */
     initializer () {
@@ -83,7 +82,7 @@ export default class gtsEntityQuery {
             target = m[1]
             isMany = true
         }
-        return co.wrap(function * (parent, args, ctx, info) {
+        return async (parent, args, ctx, info) => {
             if (isMany) {
                 /*  MANY  */
 
@@ -98,31 +97,31 @@ export default class gtsEntityQuery {
                     /*  directly  */
                     if (args.fts !== undefined)
                         /*  directly, via FTS index  */
-                        objs = yield (this._ftsSearch(target, args.fts, args.order, args.offset, args.limit, ctx))
+                        objs = await this._ftsSearch(target, args.fts, args.order, args.offset, args.limit, ctx)
                     else
                         /*  directly, via database  */
-                        objs = yield (this._models[target].findAll(opts))
+                        objs = await this._models[target].findAll(opts)
                 }
                 else {
                     /*  via relation  */
                     let getter = `get${capitalize(relation)}`
-                    objs = yield (parent[getter](opts))
+                    objs = await parent[getter](opts)
                 }
 
                 /*  check authorization  */
-                objs = yield (Promise.filter(objs, (obj) => {
+                objs = await Promise.filter(objs, (obj) => {
                     return this._authorized("read", target, obj, ctx)
-                }))
+                })
 
                 /*  map field values  */
-                yield (Promise.each(objs, (obj) => {
+                await Promise.each(objs, (obj) => {
                     this._mapFieldValues(target, obj, ctx, info)
-                }))
+                })
 
                 /*  trace access  */
-                yield (Promise.each(objs, (obj) => {
+                await Promise.each(objs, (obj) => {
                     return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
-                }))
+                })
 
                 return objs
             }
@@ -143,29 +142,29 @@ export default class gtsEntityQuery {
                         return new this._anonCtx(target)
                     else
                         /*  regular case: non-anonymous context  */
-                        obj = yield (this._models[target].findById(args.id, opts))
+                        obj = await this._models[target].findById(args.id, opts)
                 }
                 else {
                     /*  via relation  */
                     let getter = `get${capitalize(relation)}`
-                    obj = yield (parent[getter](opts))
+                    obj = await parent[getter](opts)
                 }
                 if (obj === null)
                     return null
 
                 /*  check authorization  */
-                if (!(yield (this._authorized("read", target, obj, ctx))))
+                if (!(await this._authorized("read", target, obj, ctx)))
                     return null
 
                 /*  map field values  */
                 this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
-                yield (this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx))
+                await this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx)
 
                 return obj
             }
-        }.bind(this))
+        }
     }
 }
 

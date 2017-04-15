@@ -25,7 +25,7 @@
 /*  external dependencies  */
 import Ducky from "ducky"
 
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsUtilSequelizeOptions {
     /*  initialize the mixin  */
     initializer () {

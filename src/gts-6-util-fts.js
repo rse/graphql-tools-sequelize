@@ -23,10 +23,9 @@
 */
 
 /*  external dependencies  */
-import co          from "co"
 import elasticlunr from "elasticlunr"
 
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsUtilFTS {
     /*  initialize the mixin  */
     initializer () {
@@ -46,34 +45,32 @@ export default class gtsUtilFTS {
     }
 
     /*  bootstrap FTS by creating initial in-memory index  */
-    _ftsBoot () {
-        return co(function * () {
-            /*  operate only if FTS is configured  */
-            if (this._ftsCfg === null)
-                return
+    async _ftsBoot () {
+        /*  operate only if FTS is configured  */
+        if (this._ftsCfg === null)
+            return
 
-            /*  iterate over all entity types...  */
-            for (let type of Object.keys(this._ftsCfg)) {
-                /*  create a new in-memory index  */
-                this._ftsIdx[type] = new elasticlunr.Index()
-                this._ftsIdx[type].saveDocument(false)
-                this._ftsIdx[type].addField("id")
-                this._ftsIdx[type].addField("__any")
-                this._ftsCfg[type].forEach((field) => {
-                    this._ftsIdx[type].addField(field)
-                })
-                this._ftsIdx[type].setRef("id")
+        /*  iterate over all entity types...  */
+        for (let type of Object.keys(this._ftsCfg)) {
+            /*  create a new in-memory index  */
+            this._ftsIdx[type] = new elasticlunr.Index()
+            this._ftsIdx[type].saveDocument(false)
+            this._ftsIdx[type].addField("id")
+            this._ftsIdx[type].addField("__any")
+            this._ftsCfg[type].forEach((field) => {
+                this._ftsIdx[type].addField(field)
+            })
+            this._ftsIdx[type].setRef("id")
 
-                /*  iterate over all entity objects...  */
-                let opts = { attributes: this._ftsCfg[type].concat([ "id" ]) }
-                let objs = yield (this._models[type].findAll(opts))
-                objs.forEach((obj) => {
-                    /*  add entity objects to index  */
-                    let doc = this._ftsObj2Doc(type, obj)
-                    this._ftsIdx[type].addDoc(doc)
-                })
-            }
-        }.bind(this))
+            /*  iterate over all entity objects...  */
+            let opts = { attributes: this._ftsCfg[type].concat([ "id" ]) }
+            let objs = await this._models[type].findAll(opts)
+            objs.forEach((obj) => {
+                /*  add entity objects to index  */
+                let doc = this._ftsObj2Doc(type, obj)
+                this._ftsIdx[type].addDoc(doc)
+            })
+        }
     }
 
     /*  update the FTS index  */

@@ -22,10 +22,7 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import co from "co"
-
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsEntityUpdate {
     /*  initialize the mixin  */
     initializer () {
@@ -39,7 +36,7 @@ export default class gtsEntityUpdate {
             `update(with: JSON!): ${type}!\n`
     }
     entityUpdateResolver (type) {
-        return co.wrap(function * (entity, args, ctx, info) {
+        return async (entity, args, ctx, info) => {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error("method \"update\" only allowed under \"mutation\" operation")
@@ -53,24 +50,24 @@ export default class gtsEntityUpdate {
             let build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  check access to entity  */
-            if (!(yield (this._authorized("update", type, entity, ctx))))
+            if (!(await this._authorized("update", type, entity, ctx)))
                 throw new Error(`not allowed to update entity of type "${type}"`)
 
             /*  validate attributes  */
-            yield (this._validate(type, build.attribute, ctx))
+            await this._validate(type, build.attribute, ctx)
 
             /*  adjust the attributes according to the request  */
             let opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            yield (entity.update(build.attribute, opts))
+            await entity.update(build.attribute, opts)
 
             /*  adjust the relationships according to the request  */
-            yield (this._entityUpdateFields(type, entity,
-                defined.relation, build.relation, ctx, info))
+            await this._entityUpdateFields(type, entity,
+                defined.relation, build.relation, ctx, info)
 
             /*  check access to entity again  */
-            if (!(yield (this._authorized("read", type, entity, ctx))))
+            if (!(await this._authorized("read", type, entity, ctx)))
                 return null
 
             /*  map field values  */
@@ -80,11 +77,11 @@ export default class gtsEntityUpdate {
             this._ftsUpdate(type, entity.id, entity, "update")
 
             /*  trace access  */
-            yield (this._trace(type, entity.id, entity, "update", "direct", "one", ctx))
+            await this._trace(type, entity.id, entity, "update", "direct", "one", ctx)
 
             /*  return updated entity  */
             return entity
-        }.bind(this))
+        }
     }
 }
 

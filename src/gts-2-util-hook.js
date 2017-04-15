@@ -25,7 +25,7 @@
 /*  external dependencies  */
 import Promise from "bluebird"
 
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsUtilHook {
     /*  initialize the mixin  */
     initializer () {

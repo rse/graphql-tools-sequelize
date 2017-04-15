@@ -22,10 +22,7 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import co from "co"
-
-/*  the API class  */
+/*  the mixin class  */
 export default class gtsEntityDelete {
     /*  initialize the mixin  */
     initializer () {
@@ -39,7 +36,7 @@ export default class gtsEntityDelete {
             `delete: ${this._idtype}!\n`
     }
     entityDeleteResolver (type) {
-        return co.wrap(function * (entity, args, ctx, info) {
+        return async (entity, args, ctx, info) => {
             /*  sanity check usage context  */
             if (info && info.operation && info.operation.operation !== "mutation")
                 throw new Error("method \"delete\" only allowed under \"mutation\" operation")
@@ -47,7 +44,7 @@ export default class gtsEntityDelete {
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
             /*  check access to target  */
-            if (!(yield (this._authorized("delete", type, entity, ctx))))
+            if (!(await this._authorized("delete", type, entity, ctx)))
                 return new Error(`not allowed to delete entity of type "${type}"`)
 
             /*  delete the instance  */
@@ -55,17 +52,17 @@ export default class gtsEntityDelete {
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
             let result = entity.id
-            yield (entity.destroy(opts))
+            await entity.destroy(opts)
 
             /*  update FTS index  */
             this._ftsUpdate(type, result, null, "delete")
 
             /*  trace access  */
-            yield (this._trace(type, result, null, "delete", "direct", "one", ctx))
+            await this._trace(type, result, null, "delete", "direct", "one", ctx)
 
             /*  return id of deleted entity  */
             return result
-        }.bind(this))
+        }
     }
 }
 
