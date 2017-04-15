@@ -64,7 +64,7 @@ module.exports = function (grunt) {
                         [ "transform-runtime", {
                             "helpers":     true,
                             "polyfill":    true,
-                            "regenerator": true,
+                            "regenerator": false,
                             "moduleName": "babel-runtime"
                         } ]
                     ]
