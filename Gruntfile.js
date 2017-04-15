@@ -55,7 +55,15 @@ module.exports = function (grunt) {
                         ]}],
                         [ "babelify", {
                             presets: [
-                                "es2015", "es2016", "es2017", "stage-3", "stage-2"
+                                [ "env", {
+                                    "targets": {
+                                        "node": 6.0
+                                    }
+                                } ],
+                                "es2016",
+                                "es2017",
+                                "stage-3",
+                                "stage-2"
                             ],
                             plugins: [
                                 [ "transform-runtime", {
