@@ -23,7 +23,7 @@
 */
 
 /*  external dependencies  */
-import Promise    from "bluebird"
+import Bluebird   from "bluebird"
 import capitalize from "capitalize"
 
 /*  the mixin class  */
@@ -109,17 +109,17 @@ export default class gtsEntityQuery {
                 }
 
                 /*  check authorization  */
-                objs = await Promise.filter(objs, (obj) => {
+                objs = await Bluebird.filter(objs, (obj) => {
                     return this._authorized("read", target, obj, ctx)
                 })
 
                 /*  map field values  */
-                await Promise.each(objs, (obj) => {
+                await Bluebird.each(objs, (obj) => {
                     this._mapFieldValues(target, obj, ctx, info)
                 })
 
                 /*  trace access  */
-                await Promise.each(objs, (obj) => {
+                await Bluebird.each(objs, (obj) => {
                     return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
                 })
 
