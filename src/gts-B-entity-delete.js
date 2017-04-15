@@ -24,11 +24,6 @@
 
 /*  the mixin class  */
 export default class gtsEntityDelete {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  API: delete an entity  */
     entityDeleteSchema (type) {
         return "" +

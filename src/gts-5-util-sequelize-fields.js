@@ -27,11 +27,6 @@ import capitalize from "capitalize"
 
 /*  the mixin class  */
 export default class gtsUtilSequelizeFields {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  update all relation fields of an entity  */
     async _entityUpdateFields (type, obj, def, upd, ctx, info) {
         /*  determine common Sequelize options  */

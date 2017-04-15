@@ -24,11 +24,6 @@
 
 /*  the mixin class  */
 export default class gtsEntityCreate {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  API: create a new entity  */
     entityCreateSchema (type) {
         return "" +

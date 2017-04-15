@@ -24,11 +24,6 @@
 
 /*  the mixin class  */
 export default class gtsUtilHook {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*   optionally check authorization  */
     _authorized (op, type, obj, ctx) {
         if (this._authorizer === null)

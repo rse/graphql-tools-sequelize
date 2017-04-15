@@ -27,11 +27,6 @@ import elasticlunr from "elasticlunr"
 
 /*  the mixin class  */
 export default class gtsUtilFTS {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  cherry-pick fields for FTS indexing  */
     _ftsObj2Doc (type, obj) {
         let id = String(obj.id)

@@ -28,11 +28,6 @@ import capitalize from "capitalize"
 
 /*  the mixin class  */
 export default class gtsEntityQuery {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  API: query/read one or many entities (directly or via relation)  */
     entityQuerySchema (source, relation, target) {
         let m

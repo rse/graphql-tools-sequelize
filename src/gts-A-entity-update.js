@@ -24,11 +24,6 @@
 
 /*  the mixin class  */
 export default class gtsEntityUpdate {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  API: update an entity  */
     entityUpdateSchema (type) {
         return "" +

@@ -27,11 +27,6 @@ import Ducky from "ducky"
 
 /*  the mixin class  */
 export default class gtsUtilGraphQL {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  return requested fields of GraphQL query  */
     _graphqlRequestedFields (info, obj) {
         const flattenAST = (ast, obj) => {

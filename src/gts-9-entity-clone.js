@@ -24,11 +24,6 @@
 
 /*  the mixin class  */
 export default class gtsEntityClone {
-    /*  initialize the mixin  */
-    initializer () {
-        /*  NO-OP  */
-    }
-
     /*  API: clone an entity (without relationships)  */
     entityCloneSchema (type) {
         return "" +
