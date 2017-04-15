@@ -27,6 +27,14 @@ import elasticlunr from "elasticlunr"
 
 /*  the mixin class  */
 export default class gtsUtilFTS {
+    /*  mixin initialization  */
+    initializer (sequelize, options) {
+        /* eslint no-console: off */
+        console.log("AHA", options)
+        this._ftsCfg = (typeof options.fts === "object" ? options.fts : null)
+        this._ftsIdx = {}
+    }
+
     /*  cherry-pick fields for FTS indexing  */
     _ftsObj2Doc (type, obj) {
         let id = String(obj.id)

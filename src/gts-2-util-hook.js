@@ -24,6 +24,13 @@
 
 /*  the mixin class  */
 export default class gtsUtilHook {
+    /*  mixin initialization  */
+    initializer (sequelize, options) {
+        this._validator  = (typeof options.validator  === "function" ? options.validator  : null)
+        this._authorizer = (typeof options.authorizer === "function" ? options.authorizer : null)
+        this._tracer     = (typeof options.tracer     === "function" ? options.tracer     : null)
+    }
+
     /*   optionally check authorization  */
     _authorized (op, type, obj, ctx) {
         if (this._authorizer === null)

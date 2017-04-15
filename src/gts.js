@@ -46,16 +46,11 @@ class GraphQLToolsSequelize extends aggregation(
     gtsEntityQuery, gtsEntityCreate, gtsEntityClone, gtsEntityUpdate, gtsEntityDelete
 ) {
     constructor (sequelize, options = {}) {
-        super()
+        super(sequelize, options)
         this._sequelize  = sequelize
         this._models     = sequelize.models
-        this._idtype     = (typeof options.idtype     === "string"   ? options.idtype     : "UUID")
-        this._idmake     = (typeof options.idmake     === "function" ? options.idmake     : () => (new UUID(1)).format())
-        this._validator  = (typeof options.validator  === "function" ? options.validator  : null)
-        this._authorizer = (typeof options.authorizer === "function" ? options.authorizer : null)
-        this._tracer     = (typeof options.tracer     === "function" ? options.tracer     : null)
-        this._ftsCfg     = (typeof options.fts        === "object"   ? options.fts        : null)
-        this._ftsIdx     = {}
+        this._idtype     = (typeof options.idtype === "string"   ? options.idtype : "UUID")
+        this._idmake     = (typeof options.idmake === "function" ? options.idmake : () => (new UUID(1)).format())
         this._anonCtx    = function (type) { this.__$type$ = type }
         this._anonCtx.prototype.isType = function (type) { return this.__$type$ === type }
     }
