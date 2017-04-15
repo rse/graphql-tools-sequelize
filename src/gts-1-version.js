@@ -22,20 +22,10 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* global $major: false */
-/* global $minor: false */
-/* global $micro: false */
-/* global $date:  false */
-
 /*  the mixin class  */
 export default class gtsVersion {
     version () {
-        return {
-            major: $major,
-            minor: $minor,
-            micro: $micro,
-            date:  $date
-        }
+        return { major: 1, minor: 2, micro: 0, date:  20170415 }
     }
 }
 

@@ -26,67 +26,48 @@
 module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-watch");
-    grunt.loadNpmTasks("grunt-browserify");
+    grunt.loadNpmTasks("grunt-babel");
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-eslint");
 
     grunt.initConfig({
-        version: grunt.file.readYAML("VERSION.yml"),
         eslint: {
             options: {
                 configFile: "eslint.yaml"
             },
             "graphql-tools-sequelize": [ "src/**/*.js", "tst/**/*.js" ]
         },
-        browserify: {
+        babel: {
             "graphql-tools-sequelize": {
-                files: {
-                    "lib/gts.js": [ "src/gts.js" ]
-                },
-                options: {
-                    transform: [
-                        [ "browserify-replace", { replace: [
-                            { from: /\$major/g, to: "<%= version.major %>" },
-                            { from: /\$minor/g, to: "<%= version.minor %>" },
-                            { from: /\$micro/g, to: "<%= version.micro %>" },
-                            { from: /\$date/g,  to: "<%= version.date  %>" }
-                        ]}],
-                        [ "babelify", {
-                            presets: [
-                                [ "env", {
-                                    "targets": {
-                                        "node": 6.0
-                                    }
-                                } ],
-                                "es2016",
-                                "es2017",
-                                "stage-3",
-                                "stage-2"
-                            ],
-                            plugins: [
-                                [ "transform-runtime", {
-                                    "helpers":     true,
-                                    "polyfill":    true,
-                                    "regenerator": true,
-                                    "moduleName": "babel-runtime"
-                                } ]
-                            ]
-                        } ]
-                    ],
-                    plugin: [
-                    ],
-                    external: [
-                        "pure-uuid",
-                        "ducky",
-                        "co",
-                        "bluebird",
-                        "capitalize",
-                        "elasticlunr"
-                    ],
-                    browserifyOptions: {
-                        standalone: "GraphQLToolsSequelize",
-                        debug: false
+                files: [
+                    {
+                        expand: true,
+                        cwd:    "src/",
+                        src:    [ "*.js" ],
+                        dest:   "lib/"
                     }
+                ],
+                options: {
+                    sourceMap: false,
+                    presets: [
+                        [ "env", {
+                            "targets": {
+                                "node": 6.0
+                            }
+                        } ],
+                        "es2016",
+                        "es2017",
+                        "stage-3",
+                        "stage-2"
+                    ],
+                    plugins: [
+                        [ "transform-runtime", {
+                            "helpers":     true,
+                            "polyfill":    true,
+                            "regenerator": true,
+                            "moduleName": "babel-runtime"
+                        } ]
+                    ]
                 }
             }
         },
@@ -112,7 +93,7 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask("default", [ "eslint", "browserify", "mochaTest" ]);
+    grunt.registerTask("default", [ "eslint", "babel", "mochaTest" ]);
     grunt.registerTask("test", [ "mochaTest" ]);
     grunt.registerTask("dev", [ "default", "watch" ]);
 };
