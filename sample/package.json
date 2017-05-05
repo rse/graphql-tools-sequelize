@@ -13,9 +13,9 @@
         "hapi":                    "~16.1.1",
         "hapi-plugin-graphiql":    "~1.2.3",
         "boom":                    "~4.3.1",
-        "graphql":                 "~0.9.3",
+        "graphql":                 "~0.9.6",
         "graphql-tools":           "~0.11.0",
-        "graphql-tools-types":     "~1.0.6",
+        "graphql-tools-types":     "~1.1.2",
         "graphql-tools-sequelize": "..",
         "sequelize":               "~3.30.4",
         "sqlite3":                 "~3.1.8"
