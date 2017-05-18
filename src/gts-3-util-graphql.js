@@ -88,15 +88,19 @@ export default class gtsUtilGraphQL {
                         value = { set: value }
                     if (typeof value !== "object")
                         throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
-                    if (typeof value.set === "string")
-                        value.set = [ value.set ]
-                    if (typeof value.add === "string")
-                        value.add = [ value.add ]
-                    if (typeof value.del === "string")
-                        value.del = [ value.del ]
-                    if (!Ducky.validate(value, `{
+                    if (value === null)
+                        value = { set: [] }
+                    else {
+                        if (typeof value.set === "string")
+                            value.set = [ value.set ]
+                        if (typeof value.add === "string")
+                            value.add = [ value.add ]
+                        if (typeof value.del === "string")
+                            value.del = [ value.del ]
+                        if (!Ducky.validate(value, `{
                         set?: [ string* ], add?: [ string+ ], del?: [ string+ ] }`))
-                        throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
+                            throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
+                    }
                     fields.relation[name] = value
                 }
                 else if (defined.attribute[name]) {
