@@ -86,7 +86,8 @@ export default class gtsUtilSequelizeFields {
                     if (typeof obj[method] !== "function")
                         throw new Error("relationship mutation method not found " +
                             `to ${prefix} relation ${name} on type ${type}`)
-                    await obj[method](prefix !== "remove" ? objs[0] : null, opts)
+                    let relObj = prefix !== "remove" ? (objs.length ? objs[0] : null) : null
+                    await obj[method](relObj, opts)
                 }
             }
 
