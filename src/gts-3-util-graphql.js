@@ -97,8 +97,7 @@ export default class gtsUtilGraphQL {
                             value.add = [ value.add ]
                         if (typeof value.del === "string")
                             value.del = [ value.del ]
-                        if (!Ducky.validate(value, `{
-                        set?: [ string* ], add?: [ string+ ], del?: [ string+ ] }`))
+                        if (!Ducky.validate(value, "{ set?: [ string* ], add?: [ string+ ], del?: [ string+ ] }"))
                             throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
                     }
                     fields.relation[name] = value
