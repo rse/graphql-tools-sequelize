@@ -400,11 +400,19 @@ Application Programming Interface (API)
 Assumptions
 -----------
 
-It is assumed that all your Sequelize entities have a field `id`
-which is the primary key of an entity. By default the type of field `id`
-is `UUID`, but can be overridden. In case of the type `UUID` it is assumed that
+It is assumed that all your Sequelize entities have a field
+`id` which is the (technical) primary key of an entity. By
+default the type of field `id` is `UUID`, but this can be
+overridden. In case of the type `UUID`, it is assumed that
 you define the GraphQL scalar type `UUID` with the help of
 [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
+
+Notice: all entities are required to have the field `id` and the type
+of all `id` fields have to be the same. But this does not prevent you
+from having *additional* domain-specific primary keys per entity of an
+arbitrary type, of course. GraphQL-Tools-Sequelize just uses the field
+`id` for its functionality.
+
 In addition, the scalar type `JSON` always has to be defined with the help of
 [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
 
