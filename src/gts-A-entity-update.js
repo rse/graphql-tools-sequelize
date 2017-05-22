@@ -44,9 +44,9 @@ export default class gtsEntityUpdate {
             /*  determine fields of entity as requested in GraphQL request  */
             let build = this._fieldsOfGraphQLRequest(args, info, type)
 
-            /*  check access to entity  */
-            if (!(await this._authorized("update", type, entity, ctx)))
-                throw new Error(`not allowed to update entity of type "${type}"`)
+            /*  check access to entity before action  */
+            if (!(await this._authorized("before", "update", type, entity, ctx)))
+                throw new Error(`will not be allowed to update entity of type "${type}"`)
 
             /*  validate attributes  */
             await this._validate(type, build.attribute, ctx)
@@ -61,8 +61,12 @@ export default class gtsEntityUpdate {
             await this._entityUpdateFields(type, entity,
                 defined.relation, build.relation, ctx, info)
 
+            /*  check access to entity after action  */
+            if (!(await this._authorized("after", "update", type, entity, ctx)))
+                throw new Error(`was not allowed to update entity of type "${type}"`)
+
             /*  check access to entity again  */
-            if (!(await this._authorized("read", type, entity, ctx)))
+            if (!(await this._authorized("after", "read", type, entity, ctx)))
                 return null
 
             /*  map field values  */

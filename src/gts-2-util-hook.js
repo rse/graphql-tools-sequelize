@@ -32,12 +32,12 @@ export default class gtsUtilHook {
     }
 
     /*   optionally check authorization  */
-    _authorized (op, type, obj, ctx) {
+    _authorized (moment, op, type, obj, ctx) {
         if (this._authorizer === null)
             return Promise.resolve(true)
         let result
         try {
-            result = this._authorizer.call(null, op, type, obj, ctx)
+            result = this._authorizer.call(null, moment, op, type, obj, ctx)
         }
         catch (ex) {
             result = Promise.resolve(false)

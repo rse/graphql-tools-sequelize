@@ -105,7 +105,7 @@ export default class gtsEntityQuery {
 
                 /*  check authorization  */
                 objs = await Bluebird.filter(objs, (obj) => {
-                    return this._authorized("read", target, obj, ctx)
+                    return this._authorized("after", "read", target, obj, ctx)
                 })
 
                 /*  map field values  */
@@ -148,7 +148,7 @@ export default class gtsEntityQuery {
                     return null
 
                 /*  check authorization  */
-                if (!(await this._authorized("read", target, obj, ctx)))
+                if (!(await this._authorized("after", "read", target, obj, ctx)))
                     return null
 
                 /*  map field values  */
