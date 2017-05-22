@@ -65,9 +65,9 @@ export default class gtsEntityCreate {
             /*  build a new entity  */
             let obj = this._models[type].build(build.attribute)
 
-            /*  check access to entity  */
-            if (!(await this._authorized("create", type, obj, ctx)))
-                throw new Error(`not allowed to create entity of type "${type}"`)
+            /*  check access to entity before action  */
+            if (!(await this._authorized("before", "create", type, obj, ctx)))
+                throw new Error(`will not be allowed to create entity of type "${type}"`)
 
             /*  save new entity  */
             let opts = {}
@@ -82,8 +82,12 @@ export default class gtsEntityCreate {
             await this._entityUpdateFields(type, obj,
                 defined.relation, build.relation, ctx, info)
 
+            /*  check access to entity after action  */
+            if (!(await this._authorized("after", "create", type, obj, ctx)))
+                throw new Error(`was not allowed to create entity of type "${type}"`)
+
             /*  check access to entity again  */
-            if (!(await this._authorized("read", type, obj, ctx)))
+            if (!(await this._authorized("after", "read", type, obj, ctx)))
                 return null
 
             /*  map field values  */

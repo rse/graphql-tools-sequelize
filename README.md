@@ -287,9 +287,10 @@ Application Programming Interface (API)
       The `ctx` object is just passed through
       from the `GraphQL.graphql()` call.
 
-    - `authorizer(op: String, type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
+    - `authorizer(moment: String, op: String, type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
       Optionally authorize entity object `obj` (of entity type `type`)
-      for operation `op`. The `ctx` object is just passed through from
+      for operation `op` (`create`, `read`, `update` or `delete`) at `moment` (`before` or `after`). 
+	  Notice that for `read` there is no `before` and for `delete` there is no `after`, of course. The `ctx` object is just passed through from
       the `GraphQL.graphql()` call. If the resulting Promise is rejected
       or returns `false`, the operation fails.
 

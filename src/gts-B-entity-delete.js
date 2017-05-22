@@ -38,9 +38,9 @@ export default class gtsEntityDelete {
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
-            /*  check access to target  */
-            if (!(await this._authorized("delete", type, entity, ctx)))
-                return new Error(`not allowed to delete entity of type "${type}"`)
+            /*  check access to target before action  */
+            if (!(await this._authorized("before", "delete", type, entity, ctx)))
+                return new Error(`will not be allowed to delete entity of type "${type}"`)
 
             /*  delete the instance  */
             let opts = {}

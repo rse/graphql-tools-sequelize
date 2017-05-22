@@ -87,7 +87,7 @@ import Sequelize             from "sequelize"
     const validator = async (/* type, obj */) => {
         return true
     }
-    const authorizer = async (/* op, type, obj, ctx */) => {
+    const authorizer = async (/* moment, op, type, obj, ctx */) => {
         return true
     }
     const gts = new GraphQLToolsSequelize(db, {

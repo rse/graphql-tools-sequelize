@@ -42,7 +42,7 @@ export default class gtsEntityClone {
             let defined = this._fieldsOfGraphQLType(info, type)
 
             /*  check access to parent entity  */
-            if (!(await this._authorized("read", type, entity, ctx)))
+            if (!(await this._authorized("after", "read", type, entity, ctx)))
                 throw new Error(`not allowed to read entity of type "${type}"`)
 
             /*  build a new entity  */
@@ -54,9 +54,9 @@ export default class gtsEntityClone {
             })
             let obj = this._models[type].build(data)
 
-            /*  check access to entity  */
-            if (!(await this._authorized("create", type, obj, ctx)))
-                throw new Error(`not allowed to create entity of type "${type}"`)
+            /*  check access to entity before action  */
+            if (!(await this._authorized("before", "create", type, obj, ctx)))
+                throw new Error(`will not be allowed to clone entity of type "${type}"`)
 
             /*  save new entity  */
             let opts = {}
@@ -67,8 +67,12 @@ export default class gtsEntityClone {
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))
 
+            /*  check access to entity after action  */
+            if (!(await this._authorized("after", "create", type, obj, ctx)))
+                throw new Error(`was not allowed to clone entity of type "${type}"`)
+
             /*  check access to entity again  */
-            if (!(await this._authorized("read", type, obj, ctx)))
+            if (!(await this._authorized("after", "read", type, obj, ctx)))
                 return null
 
             /*  map field values  */
