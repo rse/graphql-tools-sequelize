@@ -9,13 +9,13 @@
         "babel-preset-es2017":     "~6.24.1"
     },
     "dependencies": {
-        "pure-uuid":               "~1.4.5",
-        "hapi":                    "~16.1.1",
+        "pure-uuid":               "~1.4.6",
+        "hapi":                    "~16.3.0",
         "hapi-plugin-graphiql":    "~1.2.3",
-        "boom":                    "~4.3.1",
-        "graphql":                 "~0.9.6",
-        "graphql-tools":           "~0.11.0",
-        "graphql-tools-types":     "~1.1.2",
+        "boom":                    "~5.1.0",
+        "graphql":                 "~0.10.1",
+        "graphql-tools":           "~1.0.0",
+        "graphql-tools-types":     "~1.1.4",
         "graphql-tools-sequelize": "..",
         "sequelize":               "~3.30.4",
         "sqlite3":                 "~3.1.8"
