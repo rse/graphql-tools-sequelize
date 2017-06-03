@@ -18,10 +18,10 @@
     "bugs":     "https://github.com/rse/graphql-tools-sequelize/issues",
     "dependencies": {
         "bluebird":                                  "~3.5.0",
-        "ducky":                                     "~2.5.2",
+        "ducky":                                     "~2.5.3",
         "capitalize":                                "~1.0.0",
         "elasticlunr":                               "~0.9.5",
-        "pure-uuid":                                 "~1.4.5",
+        "pure-uuid":                                 "~1.4.6",
         "aggregation":                               "~1.2.0",
         "babel-runtime":                             "~6.23.0"
     },
@@ -38,16 +38,16 @@
         "eslint-config-standard":                    "~10.2.1",
         "eslint-plugin-standard":                    "~3.0.1",
         "eslint-plugin-promise":                     "~3.5.0",
-        "eslint-plugin-import":                      "~2.2.0",
-        "eslint-plugin-node":                        "~4.2.2",
-        "babel-preset-env":                          "~1.5.0",
+        "eslint-plugin-import":                      "~2.3.0",
+        "eslint-plugin-node":                        "~5.0.0",
+        "babel-preset-env":                          "~1.5.1",
         "babel-preset-es2016":                       "~6.24.1",
         "babel-preset-es2017":                       "~6.24.1",
         "babel-preset-stage-3":                      "~6.24.1",
         "babel-preset-stage-2":                      "~6.24.1",
         "babel-plugin-transform-runtime":            "~6.23.0",
-        "mocha":                                     "~3.4.1",
-        "chai":                                      "~3.5.0"
+        "mocha":                                     "~3.4.2",
+        "chai":                                      "~4.0.1"
     },
     "engines": {
         "node":                                      ">=6.0.0"
