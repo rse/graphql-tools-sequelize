@@ -40,14 +40,14 @@
         "eslint-plugin-promise":                     "~3.5.0",
         "eslint-plugin-import":                      "~2.3.0",
         "eslint-plugin-node":                        "~5.0.0",
-        "babel-preset-env":                          "~1.5.1",
+        "babel-preset-env":                          "~1.5.2",
         "babel-preset-es2016":                       "~6.24.1",
         "babel-preset-es2017":                       "~6.24.1",
         "babel-preset-stage-3":                      "~6.24.1",
         "babel-preset-stage-2":                      "~6.24.1",
         "babel-plugin-transform-runtime":            "~6.23.0",
         "mocha":                                     "~3.4.2",
-        "chai":                                      "~4.0.1"
+        "chai":                                      "~4.0.2"
     },
     "engines": {
         "node":                                      ">=6.0.0"
