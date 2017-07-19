@@ -53,7 +53,7 @@
         "node":                                      ">=6.0.0"
     },
     "scripts": {
-        "prepublish":  "grunt default",
-        "build":       "grunt default"
+        "prepublishOnly":  "grunt default",
+        "build":           "grunt default"
     }
 }
