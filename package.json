@@ -1,6 +1,6 @@
 {
     "name":        "graphql-tools-sequelize",
-    "version":     "1.3.8",
+    "version":     "1.3.9",
     "description": "Integration of GraphQL-Tools and Sequelize ORM",
     "keywords":    [ "graphql", "graphql-tools", "sequelize", "schema", "resolver" ],
     "main":        "lib/gts.js",
