@@ -53,7 +53,7 @@ export default class gtsEntityQuery {
                     "# optionally sort them (`order`),\n" +
                     "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
                     "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
-                    `${relation}(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+                    `${relation}(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
         }
         else {
             /*  ONE  */
