@@ -30,9 +30,13 @@ import capitalize from "capitalize"
 export default class gtsEntityQuery {
     /*  API: query/read one or many entities (directly or via relation)  */
     entityQuerySchema (source, relation, target) {
+        let isMany = false
         let m
         if ((m = target.match(/^(.+)\*$/)) !== null) {
             target = m[1]
+            isMany = true
+        }
+        if (isMany) {
             /*  MANY  */
             if (relation === "")
                 /*  directly  */
