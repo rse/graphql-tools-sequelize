@@ -60,7 +60,7 @@ export default class gtsEntityCreate {
             }
 
             /*  validate attributes  */
-            await this._validate(type, build.attribute, ctx)
+            await this._validate(type, build, ctx)
 
             /*  build a new entity  */
             let obj = this._models[type].build(build.attribute)

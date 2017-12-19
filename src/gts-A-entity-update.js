@@ -49,7 +49,7 @@ export default class gtsEntityUpdate {
                 throw new Error(`will not be allowed to update entity of type "${type}"`)
 
             /*  validate attributes  */
-            await this._validate(type, build.attribute, ctx)
+            await this._validate(type, build, ctx)
 
             /*  adjust the attributes according to the request  */
             let opts = {}
