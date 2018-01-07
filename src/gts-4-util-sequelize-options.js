@@ -48,6 +48,11 @@ export default class gtsUtilSequelizeOptions {
             })
         }
 
+        /*  determine Sequelize "include" parameter  */
+        if (args.include !== undefined) {
+            opts.include = args.include
+        }
+
         /*  determine Sequelize "attributes" parameter  */
         let fieldInfo = this._graphqlRequestedFields(info)
         let fields = Object.keys(fieldInfo)
@@ -106,6 +111,11 @@ export default class gtsUtilSequelizeOptions {
             if (!Ducky.validate(args.order, "( string | [ (string | [ string, string ])+ ])"))
                 throw new Error("invalid \"order\" argument: wrong structure")
             opts.order = args.order
+        }
+
+        /*  determine Sequelize "include" parameter  */
+        if (args.include !== undefined) {
+            opts.include = args.include
         }
 
         /*  determine Sequelize "attributes" parameter  */
