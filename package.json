@@ -33,9 +33,9 @@
         "grunt-babel":                               "~7.0.0",
         "grunt-mocha-test":                          "~0.13.3",
         "grunt-eslint":                              "~20.1.0",
-        "babel-eslint":                              "~8.0.3",
+        "babel-eslint":                              "~8.1.2",
         "babel-core":                                "~6.26.0",
-        "eslint":                                    "~4.13.1",
+        "eslint":                                    "~4.15.0",
         "eslint-config-standard":                    "~10.2.1",
         "eslint-plugin-standard":                    "~3.0.1",
         "eslint-plugin-promise":                     "~3.6.0",
@@ -47,7 +47,7 @@
         "babel-preset-stage-3":                      "~6.24.1",
         "babel-preset-stage-2":                      "~6.24.1",
         "babel-plugin-transform-runtime":            "~6.23.0",
-        "mocha":                                     "~4.0.1",
+        "mocha":                                     "~4.1.0",
         "chai":                                      "~4.1.2"
     },
     "engines": {
