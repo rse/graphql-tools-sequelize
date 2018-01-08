@@ -64,8 +64,9 @@ export default class gtsEntityQuery {
             if (relation === "")
                 /*  directly  */
                 return "" +
-                    `# Query one [${target}]() entity by its unique id or open an anonymous context for [${target}].\n` +
-                    `${target}(id: ${this._idtype}): ${target}\n`
+                    `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
+                    `# open an anonymous context for the [${target}]() entity.\n` +
+                    `${target}(id: ${this._idtype}, where: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
@@ -136,12 +137,15 @@ export default class gtsEntityQuery {
                 let obj
                 if (relation === "") {
                     /*  directly  */
-                    if (args.id === undefined)
+                    if (args.id !== undefined)
+                        /*  regular case: non-anonymous context, find by identifier  */
+                        obj = await this._models[target].findById(args.id, opts)
+                    else if (args.where !== undefined)
+                        /*  regular case: non-anonymous context, find by condition  */
+                        obj = await this._models[target].findOne(opts)
+                    else
                         /*  special case: anonymous context  */
                         return new this._anonCtx(target)
-                    else
-                        /*  regular case: non-anonymous context  */
-                        obj = await this._models[target].findById(args.id, opts)
                 }
                 else {
                     /*  via relation  */
