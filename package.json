@@ -6,16 +6,16 @@
     "main":        "lib/gts.js",
     "license":     "MIT",
     "repository": {
-        "type": "git",
-        "url":  "https://github.com/rse/graphql-tools-sequelize.git"
+        "type":    "git",
+        "url":     "https://github.com/rse/graphql-tools-sequelize.git"
     },
     "author": {
-        "name":  "Ralf S. Engelschall",
-        "email": "rse@engelschall.com",
-        "url":   "http://engelschall.com"
+        "name":    "Ralf S. Engelschall",
+        "email":   "rse@engelschall.com",
+        "url":     "http://engelschall.com"
     },
-    "homepage": "https://github.com/rse/graphql-tools-sequelize",
-    "bugs":     "https://github.com/rse/graphql-tools-sequelize/issues",
+    "homepage":    "https://github.com/rse/graphql-tools-sequelize",
+    "bugs":        "https://github.com/rse/graphql-tools-sequelize/issues",
     "dependencies": {
         "bluebird":                                  "~3.5.1",
         "ducky":                                     "~2.6.3",
@@ -54,7 +54,7 @@
         "node":                                      ">=6.0.0"
     },
     "scripts": {
-        "prepublishOnly":  "grunt default",
-        "build":           "grunt default"
+        "prepublishOnly":                            "grunt default",
+        "build":                                     "grunt default"
     }
 }
