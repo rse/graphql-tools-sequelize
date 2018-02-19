@@ -274,7 +274,7 @@ Application Programming Interface (API)
 ---------------------------------------
 
 - `import GraphQLToolsSequelize from "graphql-tools-sequelize"`<br/>
-  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`<br/>
+  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options?: Object)`<br/>
 
   Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
   The `options` have to given, but can be an empty object. It can contain the following
@@ -301,6 +301,15 @@ Application Programming Interface (API)
       Enables the Full-Text-Search (FTS) mechanism for all configured entity types
       and their listed attributes.
 
+    - `idtype: String = "UUID"`:<br/>
+      Configures the GraphQL type of the unique identifier field `id` on each entity.
+      The default type `UUID` assumes that you define the GraphQL scalar type `UUID` with the help of
+      [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
+
+    - `idmake: Function = () => (new UUID(1)).format()`:<br/>
+      Configures a function for generating unique identifiers for the field `id` on each entity.
+      The default uses [pure-uuid](https://github.com/rse/pure-uuid) to generate UUIDs of version 1.
+
 - `gts.boot(): Promise`:<br/>
 
   Bootstrap the GraphQL-Tools-Sequelize instance. It internally
@@ -322,20 +331,23 @@ Application Programming Interface (API)
     - empty `relation` and `target` cardinality 0..1:<br/>
 
         ```js
-        `# Query one [${target}]() entity by its unique id.\n` +
-        `${target}(id: String): ${target}\n`
+        `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
+        `# open an anonymous context for the [${target}]() entity.\n` +
+        `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+        `${target}(id: ${idtype}, where: JSON, include: JSON): ${target}\n`
         ```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
 
         ```js
         `# Query one or many [${target}]() entities,\n` +
-        `# by either an (optionally available) full-text-search (\`query\`)\n` +
-        `# or an (always available) attribute-based condition (\`where\`),\n` +
-        `# optionally sort them (\`order\`),\n` +
-        `# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
-        `# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
-        `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+        "# by either an (optionally available) full-text-search (`query`)\n" +
+        "# or an (always available) attribute-based condition (`where`),\n" +
+        "# optionally filter them by a condition on some relationships (`include`),\n" +
+        "# optionally sort them (`order`),\n" +
+        "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
+        "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
+        `${target}s(fts: String, where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
         ```
 
     - non-empty `relation` and `target` cardinality 0..1:<br/>
@@ -343,16 +355,22 @@ Application Programming Interface (API)
         ```js
         `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
         `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-        `${relation}(where: JSON): ${target}\n`
+        `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+        `${relation}(where: JSON, include: JSON): ${target}\n`
         ```
 
     - non-empty `relation` and `target` cardinality 0..N:<br/>
 
         ```js
-        `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
-        `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-        `${relation}(where: JSON): ${target}\n`
-        ```
+        `# Query one or many [${target}]() entities\n` +
+        `# by following the **${relation}** relation of [${source}]() entity,\n` +
+        "# optionally filter them by a condition (`where`),\n" +
+        "# optionally filter them by a condition on some relationships (`include`),\n" +
+        "# optionally sort them (`order`),\n" +
+        "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
+        "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
+        `${relation}(where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+       ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
@@ -369,8 +387,8 @@ Application Programming Interface (API)
     - For `entityCreate{Schema,Resolver}(type)`:<br/>
 
         ```js
-        `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-        `create(id: UUID, with: JSON): ${type}!\n`
+        `# Create new [${type}]() entity, optionally with specified attributes (\`with\`).\n` +
+        `create(id: ${idtype}, with: JSON): ${type}!\n`
         ```
 
     - For `entityClone{Schema,Resolver}(type)`:<br/>
@@ -391,7 +409,7 @@ Application Programming Interface (API)
 
         ```js
         `# Delete one [${type}]() entity.\n` +
-        `delete: UUID!\n`
+        `delete: ${idtype}!\n`
         ```
 
   The comments are intentionally also generated, as they document
