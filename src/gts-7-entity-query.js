@@ -68,14 +68,14 @@ export default class gtsEntityQuery {
                 return "" +
                     `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
                     `# open an anonymous context for the [${target}]() entity.\n` +
-                    "# The [${target]]() entity can be optionally filtered by a condition on some relationships (`include`).\n" +
+                    `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
                     `${target}(id: ${this._idtype}, where: JSON, include: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-                    "# The [${target]]() entity can be optionally filtered by a condition on some relationships (`include`).\n" +
+                    `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
                     `${relation}(where: JSON, include: JSON): ${target}\n`
         }
     }
