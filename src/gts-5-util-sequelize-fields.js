@@ -52,7 +52,7 @@ export default class gtsUtilSequelizeFields {
             /*  helper method for changing a single relationship  */
             const changeRelation = async (prefix, ids) => {
                 /*  map all ids onto real ORM objects  */
-                let opts2 = Object.assign(opts, { where: { id: ids } })
+                let opts2 = Object.assign({}, opts, { where: { id: ids } })
                 let objs = await this._models[target].findAll(opts2)
 
                 /*  sanity check requested ids  */
