@@ -44,20 +44,22 @@ export default class gtsEntityQuery {
                     `# Query one or many [${target}]() entities,\n` +
                     "# by either an (optionally available) full-text-search (`query`)\n" +
                     "# or an (always available) attribute-based condition (`where`),\n" +
+                    "# optionally filter them by a condition on some relationships (`include`),\n" +
                     "# optionally sort them (`order`),\n" +
                     "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
                     "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
-                    `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+                    `${target}s(fts: String, where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one or many [${target}]() entities\n` +
                     `# by following the **${relation}** relation of [${source}]() entity,\n` +
                     "# optionally filter them by a condition (`where`),\n" +
+                    "# optionally filter them by a condition on some relationships (`include`),\n" +
                     "# optionally sort them (`order`),\n" +
                     "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
                     "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
-                    `${relation}(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+                    `${relation}(where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
         }
         else {
             /*  ONE  */
@@ -66,13 +68,15 @@ export default class gtsEntityQuery {
                 return "" +
                     `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
                     `# open an anonymous context for the [${target}]() entity.\n` +
-                    `${target}(id: ${this._idtype}, where: JSON): ${target}\n`
+                    "# The [${target]]() entity can be optionally filtered by a condition on some relationships (`include`).\n" +
+                    `${target}(id: ${this._idtype}, where: JSON, include: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-                    `${relation}(where: JSON): ${target}\n`
+                    "# The [${target]]() entity can be optionally filtered by a condition on some relationships (`include`).\n" +
+                    `${relation}(where: JSON, include: JSON): ${target}\n`
         }
     }
     entityQueryResolver (source, relation, target) {
