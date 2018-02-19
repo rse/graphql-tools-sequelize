@@ -27,7 +27,7 @@ export default class gtsEntityCreate {
     /*  API: create a new entity  */
     entityCreateSchema (type) {
         return "" +
-            `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
+            `# Create new [${type}]() entity, optionally with specified attributes (\`with\`).\n` +
             `create(id: ${this._idtype}, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
