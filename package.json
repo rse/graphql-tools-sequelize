@@ -53,6 +53,7 @@
     },
     "scripts": {
         "prepublishOnly":                            "grunt default",
-        "build":                                     "grunt default"
+        "build":                                     "grunt default",
+        "test":                                      "cd sample && npm start"
     }
 }

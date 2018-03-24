@@ -119,7 +119,8 @@ import Sequelize             from "sequelize"
             ${gts.entityQuerySchema("Root", "", "Person*")}
         }
         type OrgUnit {
-            id: UUID!
+            ${gts.attrIdSchema()}
+            ${gts.attrHcSchema()}
             initials: String
             name: String
             director: Person
@@ -131,7 +132,8 @@ import Sequelize             from "sequelize"
             ${gts.entityDeleteSchema("OrgUnit")}
         }
         type Person {
-            id: UUID!
+            ${gts.attrIdSchema()}
+            ${gts.attrHcSchema()}
             initials: String
             name: String
             belongsTo: OrgUnit
@@ -154,6 +156,8 @@ import Sequelize             from "sequelize"
             Persons:    gts.entityQueryResolver ("Root", "", "Person*"),
         },
         OrgUnit: {
+            id:         gts.attrIdResolver      ("OrgUnit"),
+            hc:         gts.attrHcResolver      ("OrgUnit"),
             director:   gts.entityQueryResolver ("OrgUnit", "director",   "Person"),
             members:    gts.entityQueryResolver ("OrgUnit", "members",    "Person*"),
             parentUnit: gts.entityQueryResolver ("OrgUnit", "parentUnit", "OrgUnit"),
@@ -163,6 +167,8 @@ import Sequelize             from "sequelize"
             delete:     gts.entityDeleteResolver("OrgUnit")
         },
         Person: {
+            id:         gts.attrIdResolver      ("Person"),
+            hc:         gts.attrHcResolver      ("Person"),
             belongsTo:  gts.entityQueryResolver ("Person", "belongsTo",  "OrgUnit"),
             supervisor: gts.entityQueryResolver ("Person", "supervisor", "Person"),
             clone:      gts.entityCloneResolver ("Person"),

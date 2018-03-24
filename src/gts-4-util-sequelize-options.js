@@ -61,7 +61,9 @@ export default class gtsUtilSequelizeOptions {
         let meth = fields.filter((field) => allowed.method[field])
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
-        if (   meth.length === 0
+        if (   args[this._hcname] === undefined
+            && fieldInfo[this._hcname] === undefined
+            && meth.length === 0
             && rels.length === 0
             && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,
@@ -128,7 +130,8 @@ export default class gtsUtilSequelizeOptions {
         let meth = fields.filter((field) => allowed.method[field])
         let attr = fields.filter((field) => allowed.attribute[field])
         let rels = fields.filter((field) => allowed.relation[field])
-        if (   meth.length === 0
+        if (   fieldInfo[this._hcname] === undefined
+            && meth.length === 0
             && rels.length === 0
             && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,

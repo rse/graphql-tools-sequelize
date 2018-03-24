@@ -28,6 +28,39 @@ import capitalize from "capitalize"
 
 /*  the mixin class  */
 export default class gtsEntityQuery {
+    /*  calculate hash code of entity  */
+    _hashCodeForEntity (info, type, obj) {
+        let fields = this._fieldsOfGraphQLType(info, type)
+        let data = Object.keys(fields.attribute)
+            .sort()
+            .filter((name) => name !== this._hcname)
+            .map((attribute) => JSON.stringify(obj[attribute]))
+            .join(",")
+        return this._hcmake(data)
+    }
+
+    /*  API: query/read identifier and hash-code attributes  */
+    attrIdSchema (source) {
+        return "" +
+            `# the unique identifier of the [${source}]() entity.\n` +
+            `${this._idname}: ${this._idtype}!\n`
+    }
+    attrIdResolver (source) {
+        return (parent, args, ctx, info) => {
+            return parent[this._idname]
+        }
+    }
+    attrHcSchema (source) {
+        return "" +
+            `# the hash-code of the [${source}]() entity.\n` +
+            `${this._hcname}: ${this._hctype}!\n`
+    }
+    attrHcResolver (source) {
+        return (parent, args, ctx, info) => {
+            return this._hashCodeForEntity(info, source, parent)
+        }
+    }
+
     /*  API: query/read one or many entities (directly or via relation)  */
     entityQuerySchema (source, relation, target) {
         let isMany = false
@@ -68,15 +101,17 @@ export default class gtsEntityQuery {
                 return "" +
                     `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
                     `# open an anonymous context for the [${target}]() entity.\n` +
+                    `# The [${target}]() entity can be optionally required to have a particular hash-code (\`${this._hcname}\`) for optimistic locking purposes.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
-                    `${target}(id: ${this._idtype}, where: JSON, include: JSON): ${target}\n`
+                    `${target}(id: ${this._idtype}, ${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+                    `# The [${target}]() entity can be optionally required to have a particular hash-code (\`${this._hcname}\`) for optimistic locking purposes.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
-                    `${relation}(where: JSON, include: JSON): ${target}\n`
+                    `${relation}(${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
         }
     }
     entityQueryResolver (source, relation, target) {
@@ -158,6 +193,14 @@ export default class gtsEntityQuery {
                 }
                 if (obj === null)
                     return null
+
+                /*  check optional hash-code  */
+                if (args[this._hcname] !== undefined) {
+                    let hc = this._hashCodeForEntity(info, target, obj)
+                    if (hc !== args[this._hcname])
+                        throw new Error(`entity ${target}#${obj.id} has hash-code ${hc} ` +
+                            `(expected hash-code ${args[this._hcname]})`)
+                }
 
                 /*  check authorization  */
                 if (!(await this._authorized("after", "read", target, obj, ctx)))
