@@ -62,7 +62,7 @@ export default class gtsUtilGraphQL {
             let type = fieldsAll[field].type
             while (typeof type.ofType === "object")
                 type = type.ofType
-            if (field.match(/^(?:clone|create|update|delete)/))
+            if (field.match(/^(?:clone|create|update|delete)$/))
                 fields.method[field] = type.name
             else if (   type.constructor.name === "GraphQLScalarType"
                      || type.constructor.name === "GraphQLEnumType"  )
