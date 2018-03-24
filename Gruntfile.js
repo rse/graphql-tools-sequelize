@@ -26,9 +26,7 @@
 module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-eslint")
     grunt.loadNpmTasks("grunt-babel")
-    grunt.loadNpmTasks("grunt-mocha-test")
     grunt.loadNpmTasks("grunt-contrib-clean")
-    grunt.loadNpmTasks("grunt-contrib-watch")
     grunt.initConfig({
         eslint: {
             options: {
@@ -68,29 +66,11 @@ module.exports = function (grunt) {
                 }
             }
         },
-        mochaTest: {
-            "graphql-tools-sequelize": {
-                src: [ "tst/*.js", "!tst/common.js" ]
-            },
-            options: {
-                reporter: "spec",
-                require: "tst/common.js"
-            }
-        },
         clean: {
             clean: [ "lib" ],
             distclean: [ "node_modules" ]
-        },
-        watch: {
-            "src": {
-                files: [ "src/**/*.js", "tst/**/*.js" ],
-                tasks: [ "default" ],
-                options: {}
-            }
         }
     })
     grunt.registerTask("default", [ "eslint", "babel" ])
-    grunt.registerTask("test", [ "mochaTest" ])
-    grunt.registerTask("dev", [ "default", "watch" ])
 }
 
