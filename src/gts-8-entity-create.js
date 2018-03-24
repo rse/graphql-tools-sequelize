@@ -27,8 +27,8 @@ export default class gtsEntityCreate {
     /*  API: create a new entity  */
     entityCreateSchema (type) {
         return "" +
-            `# Create new [${type}]() entity, optionally with specified attributes (\`with\`).\n` +
-            `create(id: ${this._idtype}, with: JSON): ${type}!\n`
+            `# Create new [${type}]() entity, optionally with specified unique identifier (\`${this._idname}\`) and attributes (\`with\`).\n` +
+            `create(${this._idname}: ${this._idtype}, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
         return async (entity, args, ctx, info) => {
@@ -45,18 +45,18 @@ export default class gtsEntityCreate {
             let build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  handle unique id  */
-            if (args.id === undefined)
+            if (args[this._idname] === undefined)
                 /*  auto-generate the id  */
-                build.attribute.id = this._idmake()
+                build.attribute[this._idname] = this._idmake()
             else {
                 /*  take over id, but ensure it is unique  */
-                build.attribute.id = args.id
+                build.attribute[this._idname] = args[this._idname]
                 let opts = {}
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
-                let existing = await this._models[type].findById(build.attribute.id, opts)
+                let existing = await this._models[type].findById(build.attribute[this._idname], opts)
                 if (existing !== null)
-                    throw new Error(`entity ${type}#${build.attribute.id} already exists`)
+                    throw new Error(`entity ${type}#${build.attribute[this._idname]} already exists`)
             }
 
             /*  validate attributes  */
@@ -94,10 +94,10 @@ export default class gtsEntityCreate {
             this._mapFieldValues(type, obj, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, obj.id, obj, "create")
+            this._ftsUpdate(type, obj[this._idname], obj, "create")
 
             /*  trace access  */
-            await this._trace(type, obj.id, obj, "create", "direct", "one", ctx)
+            await this._trace(type, obj[this._idname], obj, "create", "direct", "one", ctx)
 
             /*  return new entity  */
             return obj

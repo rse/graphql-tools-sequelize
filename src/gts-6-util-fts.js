@@ -35,8 +35,8 @@ export default class gtsUtilFTS {
 
     /*  cherry-pick fields for FTS indexing  */
     _ftsObj2Doc (type, obj) {
-        let id = String(obj.id)
-        let doc = { id: id, __any: id }
+        let id = String(obj[this._idname])
+        let doc = { [ this._idname ]: id, __any: id }
         this._ftsCfg[type].forEach((field) => {
             let val = String(obj[field])
             doc[field] = val
@@ -56,15 +56,15 @@ export default class gtsUtilFTS {
             /*  create a new in-memory index  */
             this._ftsIdx[type] = new elasticlunr.Index()
             this._ftsIdx[type].saveDocument(false)
-            this._ftsIdx[type].addField("id")
+            this._ftsIdx[type].addField(this._idname)
             this._ftsIdx[type].addField("__any")
             this._ftsCfg[type].forEach((field) => {
                 this._ftsIdx[type].addField(field)
             })
-            this._ftsIdx[type].setRef("id")
+            this._ftsIdx[type].setRef(this._idname)
 
             /*  iterate over all entity objects...  */
-            let opts = { attributes: this._ftsCfg[type].concat([ "id" ]) }
+            let opts = { attributes: this._ftsCfg[type].concat([ this._idname ]) }
             let objs = await this._models[type].findAll(opts)
             objs.forEach((obj) => {
                 /*  add entity objects to index  */
@@ -175,7 +175,7 @@ export default class gtsUtilFTS {
         })
 
         /*  query entity objects from database  */
-        let opts = { where: { id: Object.keys(results1) } }
+        let opts = { where: { [this._idname]: Object.keys(results1) } }
         if (order  !== undefined) opts.order       = order
         if (offset !== undefined) opts.offset      = offset
         if (limit  !== undefined) opts.limit       = limit

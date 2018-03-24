@@ -99,11 +99,11 @@ export default class gtsEntityQuery {
             if (relation === "")
                 /*  directly  */
                 return "" +
-                    `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
+                    `# Query one [${target}]() entity by its unique identifier (\`${this._idname}\`) or condition (\`where\`) or` +
                     `# open an anonymous context for the [${target}]() entity.\n` +
                     `# The [${target}]() entity can be optionally required to have a particular hash-code (\`${this._hcname}\`) for optimistic locking purposes.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
-                    `${target}(id: ${this._idtype}, ${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
+                    `${target}(${this._idname}: ${this._idtype}, ${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
@@ -159,7 +159,7 @@ export default class gtsEntityQuery {
 
                 /*  trace access  */
                 await Bluebird.each(objs, (obj) => {
-                    return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
+                    return this._trace(target, obj[this._idname], obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
                 })
 
                 return objs
@@ -176,9 +176,9 @@ export default class gtsEntityQuery {
                 let obj
                 if (relation === "") {
                     /*  directly  */
-                    if (args.id !== undefined)
+                    if (args[this._idname] !== undefined)
                         /*  regular case: non-anonymous context, find by identifier  */
-                        obj = await this._models[target].findById(args.id, opts)
+                        obj = await this._models[target].findById(args[this._idname], opts)
                     else if (args.where !== undefined)
                         /*  regular case: non-anonymous context, find by condition  */
                         obj = await this._models[target].findOne(opts)
@@ -198,7 +198,7 @@ export default class gtsEntityQuery {
                 if (args[this._hcname] !== undefined) {
                     let hc = this._hashCodeForEntity(info, target, obj)
                     if (hc !== args[this._hcname])
-                        throw new Error(`entity ${target}#${obj.id} has hash-code ${hc} ` +
+                        throw new Error(`entity ${target}#${obj[this._idname]} has hash-code ${hc} ` +
                             `(expected hash-code ${args[this._hcname]})`)
                 }
 
@@ -210,7 +210,7 @@ export default class gtsEntityQuery {
                 this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
-                await this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx)
+                await this._trace(target, obj[this._idname], obj, "read", relation === "" ? "direct" : "relation", "one", ctx)
 
                 return obj
             }

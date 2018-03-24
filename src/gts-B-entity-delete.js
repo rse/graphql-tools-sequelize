@@ -46,7 +46,7 @@ export default class gtsEntityDelete {
             let opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let result = entity.id
+            let result = entity[this._idname]
             await entity.destroy(opts)
 
             /*  update FTS index  */

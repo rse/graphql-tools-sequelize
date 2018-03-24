@@ -52,13 +52,13 @@ export default class gtsUtilSequelizeFields {
             /*  helper method for changing a single relationship  */
             const changeRelation = async (prefix, ids) => {
                 /*  map all ids onto real ORM objects  */
-                let opts2 = Object.assign({}, opts, { where: { id: ids } })
+                let opts2 = Object.assign({}, opts, { where: { [ this._idname ]: ids } })
                 let objs = await this._models[target].findAll(opts2)
 
                 /*  sanity check requested ids  */
                 if (objs.length < ids.length) {
                     let found = {}
-                    objs.forEach((obj) => { found[obj.id] = true })
+                    objs.forEach((obj) => { found[obj[this._idname]] = true })
                     for (let j = 0; j < ids.length; j++)
                         if (!found[ids[j]])
                             throw new Error(`no such entity ${target}#${ids[j]} found`)

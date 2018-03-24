@@ -47,9 +47,9 @@ export default class gtsEntityClone {
 
             /*  build a new entity  */
             let data = {}
-            data.id = this._idmake()
+            data[this._idname] = this._idmake()
             Object.keys(defined.attribute).forEach((attr) => {
-                if (attr !== "id")
+                if (attr !== this._idname)
                     data[attr] = entity[attr]
             })
             let obj = this._models[type].build(data)
@@ -79,10 +79,10 @@ export default class gtsEntityClone {
             this._mapFieldValues(type, obj, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, obj.id, obj, "create")
+            this._ftsUpdate(type, obj[this._idname], obj, "create")
 
             /*  trace access  */
-            await this._trace(type, obj.id, obj, "create", "direct", "one", ctx)
+            await this._trace(type, obj[this._idname], obj, "create", "direct", "one", ctx)
 
             /*  return new entity  */
             return obj

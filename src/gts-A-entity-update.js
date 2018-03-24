@@ -73,10 +73,10 @@ export default class gtsEntityUpdate {
             this._mapFieldValues(type, entity, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, entity.id, entity, "update")
+            this._ftsUpdate(type, entity[this._idname], entity, "update")
 
             /*  trace access  */
-            await this._trace(type, entity.id, entity, "update", "direct", "one", ctx)
+            await this._trace(type, entity[this._idname], entity, "update", "direct", "one", ctx)
 
             /*  return updated entity  */
             return entity
