@@ -116,7 +116,7 @@ const definition = `
         ${gts.entityQuerySchema("Root", "", "Person*")}
     }
     type OrgUnit {
-        id: UUID!
+        ${gts.attrIdSchema()}
         initials: String
         name: String
         director: Person
@@ -128,7 +128,7 @@ const definition = `
         ${gts.entityDeleteSchema("OrgUnit")}
     }
     type Person {
-        id: UUID!
+        ${gts.attrIdSchema()}
         initials: String
         name: String
         belongsTo: OrgUnit
@@ -157,6 +157,7 @@ const resolvers = {
         Persons:    gts.entityQueryResolver ("Root", "", "Person*"),
     },
     OrgUnit: {
+        id:         gts.attrIdResolver      ("OrgUnit"),
         director:   gts.entityQueryResolver ("OrgUnit", "director",   "Person"),
         members:    gts.entityQueryResolver ("OrgUnit", "members",    "Person*"),
         parentUnit: gts.entityQueryResolver ("OrgUnit", "parentUnit", "OrgUnit"),
@@ -166,6 +167,7 @@ const resolvers = {
         delete:     gts.entityDeleteResolver("OrgUnit")
     },
     Person: {
+        id:         gts.attrIdResolver      ("Person"),
         belongsTo:  gts.entityQueryResolver ("Person", "belongsTo",  "OrgUnit"),
         supervisor: gts.entityQueryResolver ("Person", "supervisor", "Person"),
         clone:      gts.entityCloneResolver ("Person"),
@@ -301,19 +303,59 @@ Application Programming Interface (API)
       Enables the Full-Text-Search (FTS) mechanism for all configured entity types
       and their listed attributes.
 
+    - `idname: String = "id"`:<br/>
+      Configures the GraphQL name of the mandatory unique identifier attribute on each entity.
+      The default name is `id`.
+
     - `idtype: String = "UUID"`:<br/>
-      Configures the GraphQL type of the unique identifier field `id` on each entity.
+      Configures the GraphQL type of the mandatory unique identifier attribute on each entity.
       The default type `UUID` assumes that you define the GraphQL scalar type `UUID` with the help of
       [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
 
     - `idmake: Function = () => (new UUID(1)).format()`:<br/>
-      Configures a function for generating unique identifiers for the field `id` on each entity.
+      Configures a function for generating unique identifiers for the mandatory unique identifier attribute on each entity.
       The default uses [pure-uuid](https://github.com/rse/pure-uuid) to generate UUIDs of version 1.
+
+    - `hcname: String = "hc"`:<br/>
+      Configures the GraphQL name of the optional hash-code attribute on each entity.
+      The default name is `hc`. This attribute is NOT persisted and instead calculated on
+      the fly and is intended to be used for optimistic locking purposes.
+
+    - `hctype: String = "UUID"`:<br/>
+      Configures the GraphQL type of the optional hash-code attribute on each entity.
+      The default type `UUID` assumes that you define the GraphQL scalar type `UUID` with the help of
+      [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
+
+    - `hcmake: Function = (data) => (new UUID(5, "ns:URL", \`uri:gts:${data}\`)).format()`:<br/>
+      Configures a function for generating hash-codes for the optional hash-code attribute on each entity.
+      The default uses [pure-uuid](https://github.com/rse/pure-uuid) to generate UUIDs of version 5.
 
 - `gts.boot(): Promise`:<br/>
 
   Bootstrap the GraphQL-Tools-Sequelize instance. It internally
   mainly initialized the Full-Text-Search (FTS) mechanism.
+
+- `gts.attrIdSchema(source: String): String`,<br/>
+  `gts.attrIdResolver(source: String): Function`:<br/>
+
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for querying the mandatory unique identifier attribute
+  of an entity of type `source`. By default this generates a schema
+  entry `<idname>: <idtype>` and a resolver which just returns
+  `<object>[<idname>]`. This mandatory unique identifier attribute has
+  to be persisted and hence part of the Sequelize schema definition.
+
+- `gts.attrHcSchema(source: String): String`,<br/>
+  `gts.attrHcResolver(source: String): Function`:<br/>
+
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for querying the optional hash-code attribute of an
+  entity of type `source`. By default this generates a schema entry
+  `<hcname>: <hctype>` and a resolver which returns something like
+  `<hcmake>(data(<object>))`, where `data()` is an internal function
+  which deterministically concatenates the values of all attributes of
+  `<object>`. This optional hash-code attribute has NOT to be persisted
+  and hence SHOULD NOT BE part of the Sequelize schema definition.
 
 - `gts.entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
   `gts.entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
@@ -419,11 +461,12 @@ Application Programming Interface (API)
 Assumptions
 -----------
 
-It is assumed that all your Sequelize entities have a field
-`id` which is the (technical) primary key of an entity. By
-default the type of field `id` is `UUID`, but this can be
-overridden. In case of the type `UUID`, it is assumed that
-you define the GraphQL scalar type `UUID` with the help of
+It is assumed that all your Sequelize entities have an attribute
+`id` (see also `idname` configuration option) which is the
+(technical) primary key of an entity. By default, the type of
+field `id` is `UUID`, but this can be overridden (see `idtype`
+configuration option). In case of the type `UUID`, it is assumed
+that you define the GraphQL scalar type `UUID` with the help of
 [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
 
 Notice: all entities are required to have the field `id` and the type
