@@ -9,7 +9,7 @@ import HAPIGraphiQL          from "hapi-plugin-graphiql"
 import Boom                  from "boom"
 import Sequelize             from "sequelize"
 
-(async function () {
+;(async function () {
     /*  establish database connection  */
     let db = new Sequelize("./sample.db", "", "", {
         dialect: "sqlite", host: "", port: "", storage: "./sample.db",
@@ -244,15 +244,14 @@ import Sequelize             from "sequelize"
     `
 
     /*  setup network service  */
-    let server = new HAPI.Server()
-    server.connection({
+    let server = new HAPI.Server({
         address:  "0.0.0.0",
         port:     12345
     })
 
     /*  establish the HAPI route for GraphiQL UI  */
-    server.register({
-        register: HAPIGraphiQL,
+    await server.register({
+        plugin: HAPIGraphiQL,
         options: {
             graphiqlURL:      "/api",
             graphqlFetchURL:  "/api",
@@ -276,10 +275,10 @@ import Sequelize             from "sequelize"
         config: {
             payload: { output: "data", parse: true, allow: "application/json" }
         },
-        handler: (request, reply) => {
+        handler: async (request, h) => {
             /*  determine request  */
             if (typeof request.payload !== "object" || request.payload === null)
-                return reply(Boom.badRequest("invalid request"))
+                return Boom.badRequest("invalid request")
             let query     = request.payload.query
             let variables = request.payload.variables
             let operation = request.payload.operationName
@@ -288,7 +287,7 @@ import Sequelize             from "sequelize"
             if (typeof variables === "string")
                 variables = JSON.parse(variables)
             if (typeof operation === "object" && operation !== null)
-                return reply(Boom.badRequest("invalid request"))
+                return Boom.badRequest("invalid request")
 
             /*  wrap GraphQL operation into a database transaction  */
             return db.transaction({
@@ -304,20 +303,25 @@ import Sequelize             from "sequelize"
                 return GraphQL.graphql(schema, query, null, ctx, variables, operation)
             }).then((result) => {
                 /*  success/commit  */
-                reply(result).code(200)
+                return h.response(result).code(200)
             }).catch((result) => {
                 /*  error/rollback  */
-                reply(result)
+                if (typeof result === "object" && result instanceof Error)
+                    result = `${result.name}: ${result.message}`
+                else if (typeof result !== "string")
+                    result = result.toString()
+                result = { errors: [ { message: result } ] }
+                return h.response(result).code(200)
             })
         }
     })
 
     /*  start server  */
-    server.start(() => {
-        console.log(`GraphiQL UI:  [GET]  ${server.info.uri}/api`)
-        console.log(`GraphQL  API: [POST] ${server.info.uri}/api`)
-    })
+    await server.start()
+    console.log(`GraphiQL UI:  [GET]  ${server.info.uri}/api`)
+    console.log(`GraphQL  API: [POST] ${server.info.uri}/api`)
+
 })().catch((ex) => {
-    console.log("ERROR: " + ex)
+    console.log(`ERROR: ${ex}`)
 })
 
