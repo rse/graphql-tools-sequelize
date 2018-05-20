@@ -16,6 +16,12 @@
     },
     "homepage":    "https://github.com/rse/graphql-tools-sequelize",
     "bugs":        "https://github.com/rse/graphql-tools-sequelize/issues",
+    "peerDependencies": {
+        "graphql":                                   ">=0.13.0",
+        "graphql-tools":                             ">=3.0.0",
+        "graphql-tools-types":                       ">=1.1.0",
+        "sequelize":                                 ">=4.0.0"
+    },
     "dependencies": {
         "bluebird":                                  "3.5.1",
         "ducky":                                     "2.6.8",
