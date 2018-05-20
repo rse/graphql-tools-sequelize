@@ -25,7 +25,7 @@
 /*  the mixin class  */
 export default class gtsVersion {
     version () {
-        return { major: 1, minor: 5, micro: 5, date: 20180520 }
+        return { major: 1, minor: 5, micro: 6, date: 20180520 }
     }
 }
 
