@@ -119,8 +119,8 @@ import Sequelize             from "sequelize"
             ${gts.entityQuerySchema("Root", "", "Person*")}
         }
         type OrgUnit {
-            ${gts.attrIdSchema()}
-            ${gts.attrHcSchema()}
+            ${gts.attrIdSchema("OrgUnit")}
+            ${gts.attrHcSchema("OrgUnit")}
             initials: String
             name: String
             director: Person
@@ -132,8 +132,8 @@ import Sequelize             from "sequelize"
             ${gts.entityDeleteSchema("OrgUnit")}
         }
         type Person {
-            ${gts.attrIdSchema()}
-            ${gts.attrHcSchema()}
+            ${gts.attrIdSchema("Person")}
+            ${gts.attrHcSchema("Person")}
             initials: String
             name: String
             belongsTo: OrgUnit

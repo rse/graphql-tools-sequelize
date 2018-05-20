@@ -116,7 +116,8 @@ const definition = `
         ${gts.entityQuerySchema("Root", "", "Person*")}
     }
     type OrgUnit {
-        ${gts.attrIdSchema()}
+        ${gts.attrIdSchema("OrgUnit")}
+        ${gts.attrHcSchema("OrgUnit")}
         initials: String
         name: String
         director: Person
@@ -128,7 +129,8 @@ const definition = `
         ${gts.entityDeleteSchema("OrgUnit")}
     }
     type Person {
-        ${gts.attrIdSchema()}
+        ${gts.attrIdSchema("Person")}
+        ${gts.attrHcSchema("Person")}
         initials: String
         name: String
         belongsTo: OrgUnit
@@ -158,6 +160,7 @@ const resolvers = {
     },
     OrgUnit: {
         id:         gts.attrIdResolver      ("OrgUnit"),
+        hc:         gts.attrHcResolver      ("OrgUnit"),
         director:   gts.entityQueryResolver ("OrgUnit", "director",   "Person"),
         members:    gts.entityQueryResolver ("OrgUnit", "members",    "Person*"),
         parentUnit: gts.entityQueryResolver ("OrgUnit", "parentUnit", "OrgUnit"),
@@ -168,6 +171,7 @@ const resolvers = {
     },
     Person: {
         id:         gts.attrIdResolver      ("Person"),
+        hc:         gts.attrHcResolver      ("Person"),
         belongsTo:  gts.entityQueryResolver ("Person", "belongsTo",  "OrgUnit"),
         supervisor: gts.entityQueryResolver ("Person", "supervisor", "Person"),
         clone:      gts.entityCloneResolver ("Person"),
