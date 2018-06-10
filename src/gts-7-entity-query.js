@@ -158,17 +158,19 @@ export default class gtsEntityQuery {
                 })
 
                 /*  trace access  */
-                await this._trace(Object.assign({}, relation !== "" ? {
-                    srcType:  source,
-                    srcId:    parent[this._idname],
-                    srcAttr:  relation
-                } : {}, {
-                    op:       "read",
-                    arity:    "many",
-                    dstType:  target,
-                    dstIds:   objs.map((obj) => obj[this._idname]),
-                    dstAttrs: Object.keys(this._graphqlRequestedFields(info))
-                }), ctx)
+                if (objs.length > 0) {
+                    await this._trace(Object.assign({}, relation !== "" ? {
+                        srcType:  source,
+                        srcId:    parent[this._idname],
+                        srcAttr:  relation
+                    } : {}, {
+                        op:       "read",
+                        arity:    "many",
+                        dstType:  target,
+                        dstIds:   objs.map((obj) => obj[this._idname]),
+                        dstAttrs: Object.keys(this._graphqlRequestedFields(info))
+                    }), ctx)
+                }
 
                 return objs
             }
