@@ -48,12 +48,12 @@ export default class gtsUtilHook {
     }
 
     /*   optionally provide tracing information  */
-    _trace (type, oid, obj, op, via, onto, ctx) {
+    _trace (record, ctx) {
         if (this._tracer === null)
             return Promise.resolve(true)
         let result
         try {
-            result = this._tracer.call(null, type, oid, obj, op, via, onto, ctx)
+            result = this._tracer.call(null, record, ctx)
         }
         catch (ex) {
             result = Promise.resolve(false)

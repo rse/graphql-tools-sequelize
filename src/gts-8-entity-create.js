@@ -98,7 +98,13 @@ export default class gtsEntityCreate {
             this._ftsUpdate(type, obj[this._idname], obj, "create")
 
             /*  trace access  */
-            await this._trace(type, obj[this._idname], obj, "create", "direct", "one", ctx)
+            await this._trace({
+                op:       "create",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ obj[this._idname] ],
+                dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
+            }, ctx)
 
             /*  return new entity  */
             return obj

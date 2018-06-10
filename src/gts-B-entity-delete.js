@@ -53,7 +53,13 @@ export default class gtsEntityDelete {
             this._ftsUpdate(type, result, null, "delete")
 
             /*  trace access  */
-            await this._trace(type, result, null, "delete", "direct", "one", ctx)
+            await this._trace({
+                op:       "delete",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ result ],
+                dstAttrs: [ "*" ]
+            }, ctx)
 
             /*  return id of deleted entity  */
             return result

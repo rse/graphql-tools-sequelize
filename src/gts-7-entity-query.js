@@ -158,9 +158,17 @@ export default class gtsEntityQuery {
                 })
 
                 /*  trace access  */
-                await Bluebird.each(objs, (obj) => {
-                    return this._trace(target, obj[this._idname], obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
-                })
+                await this._trace(Object.assign({}, relation !== "" ? {
+                    srcType:  source,
+                    srcId:    parent[this._idname],
+                    srcAttr:  relation
+                } : {}, {
+                    op:       "read",
+                    arity:    "many",
+                    dstType:  target,
+                    dstIds:   objs.map((obj) => obj[this._idname]),
+                    dstAttrs: Object.keys(this._graphqlRequestedFields(info))
+                }), ctx)
 
                 return objs
             }
@@ -210,7 +218,17 @@ export default class gtsEntityQuery {
                 this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
-                await this._trace(target, obj[this._idname], obj, "read", relation === "" ? "direct" : "relation", "one", ctx)
+                await this._trace(Object.assign({}, relation !== "" ? {
+                    srcType:  source,
+                    srcId:    parent[this._idname],
+                    srcAttr:  relation
+                } : {}, {
+                    op:       "read",
+                    arity:    "one",
+                    dstType:  target,
+                    dstIds:   [ obj[this._idname] ],
+                    dstAttrs: Object.keys(this._graphqlRequestedFields(info))
+                }), ctx)
 
                 return obj
             }

@@ -76,7 +76,13 @@ export default class gtsEntityUpdate {
             this._ftsUpdate(type, entity[this._idname], entity, "update")
 
             /*  trace access  */
-            await this._trace(type, entity[this._idname], entity, "update", "direct", "one", ctx)
+            await this._trace({
+                op:       "update",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ entity[this._idname] ],
+                dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
+            }, ctx)
 
             /*  return updated entity  */
             return entity
