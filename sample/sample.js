@@ -94,8 +94,8 @@ import Sequelize             from "sequelize"
     const gts = new GraphQLToolsSequelize(db, {
         validator:  validator,
         authorizer: authorizer,
-        tracer: async (type, oid, obj, op, via, onto /*, ctx */) => {
-            console.log(`trace: type=${type} oid=${oid || "none"} op=${op} via=${via} onto=${onto}`)
+        tracer: async (record /*, ctx */) => {
+            console.log(`trace: record=${JSON.stringify(record)}`)
         },
         fts: {
             "OrgUnit": [ "name" ],
