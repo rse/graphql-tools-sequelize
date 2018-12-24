@@ -47,20 +47,17 @@ module.exports = function (grunt) {
                 options: {
                     sourceMap: false,
                     presets: [
-                        [ "env", {
+                        [ "@babel/preset-env", {
                             "targets": {
-                                "node": 6.0
+                                "node": "8.0.0"
                             }
-                        } ],
-                        "stage-3",
-                        "stage-2"
+                        } ]
                     ],
                     plugins: [
-                        [ "transform-runtime", {
+                        [ "@babel/plugin-transform-runtime", {
+                            "corejs":      2,
                             "helpers":     true,
-                            "polyfill":    true,
-                            "regenerator": false,
-                            "moduleName": "babel-runtime"
+                            "regenerator": false
                         } ]
                     ]
                 }
