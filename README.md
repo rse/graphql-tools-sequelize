@@ -290,8 +290,7 @@ Application Programming Interface (API)
       Optionally validate entity object `obj` (of entity type `type`)
       just before create or update operations. If the resulting
       Promise is rejected, the create or update operation fails.
-      The `ctx` object is just passed through
-      from the `GraphQL.graphql()` call.
+      The `ctx` object is just passed through from the `GraphQL.graphql()` call.
 
     - `authorizer(moment: String, op: String, type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
       Optionally authorize entity object `obj` (of entity type `type`)
@@ -300,8 +299,10 @@ Application Programming Interface (API)
       the `GraphQL.graphql()` call. If the resulting Promise is rejected
       or returns `false`, the operation fails.
 
-    - `tracer(type: String, oid: String, obj: Object, op: String, via: String, onto: String, ctx: Object): Promise<any>`:<br/>
-      Optionally trace the operation `op` on entity object `obj` (which has object id `oid`).
+    - `tracer(record: Object, ctx: Object): Promise<any>`:<br/>
+      Optionally trace the operation via the action `record`. The fields of `record` are:
+      `{ op: String, arity: String, dstType: String, dstIds: String[], dstAttrs: String[] }`.
+      The `ctx` object is just passed through from the `GraphQL.graphql()` call.
 
     - `fts: { [String]: String[] }`:<br/>
       Enables the Full-Text-Search (FTS) mechanism for all configured entity types
