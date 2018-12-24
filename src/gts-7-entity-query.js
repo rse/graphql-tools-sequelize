@@ -24,7 +24,6 @@
 
 /*  external dependencies  */
 import Bluebird   from "bluebird"
-import capitalize from "capitalize"
 
 /*  the mixin class  */
 export default class gtsEntityQuery {
@@ -143,7 +142,7 @@ export default class gtsEntityQuery {
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${capitalize(relation)}`
+                    let getter = `get${this._capitalize(relation)}`
                     objs = await parent[getter](opts)
                 }
 
@@ -186,7 +185,7 @@ export default class gtsEntityQuery {
                     /*  directly  */
                     if (args[this._idname] !== undefined)
                         /*  regular case: non-anonymous context, find by identifier  */
-                        obj = await this._models[target].findById(args[this._idname], opts)
+                        obj = await this._models[target].findByPk(args[this._idname], opts)
                     else if (args.where !== undefined)
                         /*  regular case: non-anonymous context, find by condition  */
                         obj = await this._models[target].findOne(opts)
@@ -196,7 +195,7 @@ export default class gtsEntityQuery {
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${capitalize(relation)}`
+                    let getter = `get${this._capitalize(relation)}`
                     obj = await parent[getter](opts)
                 }
                 if (obj === null)

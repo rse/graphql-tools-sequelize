@@ -55,7 +55,7 @@ export default class gtsEntityCreate {
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
                 opts.attributes = [ this._idname ]
-                let existing = await this._models[type].findById(build.attribute[this._idname], opts)
+                let existing = await this._models[type].findByPk(build.attribute[this._idname], opts)
                 if (existing !== null)
                     throw new Error(`entity ${type}#${build.attribute[this._idname]} already exists`)
             }

@@ -27,7 +27,7 @@ import Ducky from "ducky"
 
 /*  the mixin class  */
 export default class gtsUtilSequelizeOptions {
-    /*  GraphQL standard options to Sequelize findById() options conversion  */
+    /*  GraphQL standard options to Sequelize findByPk() options conversion  */
     _findOneOptions (entity, args, info) {
         let opts = {}
 

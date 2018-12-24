@@ -22,11 +22,13 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import capitalize from "capitalize"
-
 /*  the mixin class  */
 export default class gtsUtilSequelizeFields {
+    /*  capitalize the first letter of an identifier  */
+    _capitalize (id) {
+        return (id.substr(0, 1).toUpperCase() + id.substr(1))
+    }
+
     /*  update all relation fields of an entity  */
     async _entityUpdateFields (type, obj, def, upd, ctx, info) {
         /*  determine common Sequelize options  */
@@ -72,7 +74,7 @@ export default class gtsUtilSequelizeFields {
                 /*  change relationship  */
                 if (many) {
                     /*  change relationship of cardinality 0..N  */
-                    let method = `${prefix}${capitalize(name)}`
+                    let method = `${prefix}${this._capitalize(name)}`
                     if (typeof obj[method] !== "function")
                         throw new Error("relationship mutation method not found " +
                             `to ${prefix} relation ${name} on type ${type}`)
@@ -82,7 +84,7 @@ export default class gtsUtilSequelizeFields {
                     /*  change relationship of cardinality 0..1  */
                     if (prefix === "add")
                         prefix = "set"
-                    let method = `${prefix}${capitalize(name)}`
+                    let method = `${prefix}${this._capitalize(name)}`
                     if (typeof obj[method] !== "function")
                         throw new Error("relationship mutation method not found " +
                             `to ${prefix} relation ${name} on type ${type}`)
