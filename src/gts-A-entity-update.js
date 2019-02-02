@@ -67,7 +67,7 @@ export default class gtsEntityUpdate {
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, entity, ctx)))
-                return null
+                throw new Error(`was not allowed to read (updated) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, entity, ctx, info)

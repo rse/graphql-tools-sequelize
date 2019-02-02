@@ -73,7 +73,7 @@ export default class gtsEntityClone {
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, obj, ctx)))
-                return null
+                throw new Error(`was not allowed to read (cloned) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, obj, ctx, info)
