@@ -85,11 +85,11 @@ export default class gtsEntityCreate {
 
             /*  check access to entity after action  */
             if (!(await this._authorized("after", "create", type, obj, ctx)))
-                throw new Error(`was not allowed to create entity of type "${type}"`)
+                throw new Error(`was not allowed to create (new) entity of type "${type}"`)
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, obj, ctx)))
-                return null
+                throw new Error(`was not allowed to read (new) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, obj, ctx, info)
