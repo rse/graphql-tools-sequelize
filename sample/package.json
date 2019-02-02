@@ -4,19 +4,19 @@
     "description": "GraphQL-Tools-Sequelize Sample",
     "devDependencies": {
         "@babel/node":             "7.2.2",
-        "@babel/preset-env":       "7.2.3"
+        "@babel/preset-env":       "7.3.1"
     },
     "dependencies": {
         "pure-uuid":               "1.5.6",
-        "hapi":                    "17.8.1",
-        "hapi-plugin-graphiql":    "2.0.5",
+        "hapi":                    "18.0.1",
+        "hapi-plugin-graphiql":    "2.1.0",
         "boom":                    "7.3.0",
-        "graphql":                 "0.13.2",
-        "graphql-tools":           "4.0.3",
-        "graphql-tools-types":     "1.1.26",
+        "graphql":                 "14.1.1",
+        "graphql-tools":           "4.0.4",
+        "graphql-tools-types":     "1.2.0",
         "graphql-tools-sequelize": "..",
         "sequelize":               "4.42.0",
-        "sqlite3":                 "4.0.4"
+        "sqlite3":                 "4.0.6"
     },
     "scripts": {
         "start": "babel-node --presets @babel/preset-env --only sample.js sample.js"
