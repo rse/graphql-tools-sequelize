@@ -14,7 +14,6 @@ import Sequelize             from "sequelize"
     let db = new Sequelize("./sample.db", "", "", {
         dialect: "sqlite", host: "", port: "", storage: "./sample.db",
         define: { freezeTableName: true, timestamps: false },
-        operatorsAliases: false,
         logging: (msg) => { console.log("Sequelize: " + msg) },
     })
     await db.authenticate()
@@ -293,8 +292,8 @@ import Sequelize             from "sequelize"
             return db.transaction({
                 autocommit:     false,
                 deferrable:     true,
-                type:           db.Transaction.TYPES.DEFERRED,
-                isolationLevel: db.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+                type:           Sequelize.Transaction.TYPES.DEFERRED,
+                isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
             }, (tx) => {
                 /*  create context for GraphQL resolver functions  */
                 let ctx = { tx }
