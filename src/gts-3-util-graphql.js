@@ -56,8 +56,8 @@ export default class gtsUtilGraphQL {
 
     /*  determine fields (and their type) of a GraphQL object type  */
     _fieldsOfGraphQLType (info, entity) {
-        let fields = { attribute: {}, relation: {}, method: {} }
-        let fieldsAll = info.schema._typeMap[entity]._fields
+        const fields = { attribute: {}, relation: {}, method: {} }
+        const fieldsAll = info.schema._typeMap[entity]._fields
         Object.keys(fieldsAll).forEach((field) => {
             let type = fieldsAll[field].type
             while (typeof type.ofType === "object")
@@ -78,8 +78,8 @@ export default class gtsUtilGraphQL {
 
     /*  determine fields (and their type) of a GraphQL request  */
     _fieldsOfGraphQLRequest (args, info, entity) {
-        let defined = this._fieldsOfGraphQLType(info, entity)
-        let fields = { attribute: {}, relation: {} }
+        const defined = this._fieldsOfGraphQLType(info, entity)
+        const fields = { attribute: {}, relation: {} }
         if (typeof args.with === "object") {
             Object.keys(args.with).forEach((name) => {
                 if (defined.relation[name]) {

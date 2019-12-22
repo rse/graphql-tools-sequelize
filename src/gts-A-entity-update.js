@@ -39,10 +39,10 @@ export default class gtsEntityUpdate {
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this._fieldsOfGraphQLType(info, type)
+            const defined = this._fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this._fieldsOfGraphQLRequest(args, info, type)
+            const build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  check access to entity before action  */
             if (!(await this._authorized("before", "update", type, entity, ctx)))
@@ -52,7 +52,7 @@ export default class gtsEntityUpdate {
             await this._validate(type, build, ctx)
 
             /*  adjust the attributes according to the request  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
             await entity.update(build.attribute, opts)

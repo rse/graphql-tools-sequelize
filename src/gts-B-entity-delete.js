@@ -43,10 +43,10 @@ export default class gtsEntityDelete {
                 return new Error(`will not be allowed to delete entity of type "${type}"`)
 
             /*  delete the instance  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let result = entity[this._idname]
+            const result = entity[this._idname]
             await entity.destroy(opts)
 
             /*  update FTS index  */

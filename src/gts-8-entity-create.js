@@ -39,10 +39,10 @@ export default class gtsEntityCreate {
                 throw new Error(`method "create" only allowed in anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this._fieldsOfGraphQLType(info, type)
+            const defined = this._fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this._fieldsOfGraphQLRequest(args, info, type)
+            const build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  handle unique id  */
             if (args[this._idname] === undefined)
@@ -51,11 +51,11 @@ export default class gtsEntityCreate {
             else {
                 /*  take over id, but ensure it is unique  */
                 build.attribute[this._idname] = args[this._idname]
-                let opts = {}
+                const opts = {}
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
                 opts.attributes = [ this._idname ]
-                let existing = await this._models[type].findByPk(build.attribute[this._idname], opts)
+                const existing = await this._models[type].findByPk(build.attribute[this._idname], opts)
                 if (existing !== null)
                     throw new Error(`entity ${type}#${build.attribute[this._idname]} already exists`)
             }
@@ -64,17 +64,17 @@ export default class gtsEntityCreate {
             await this._validate(type, build, ctx)
 
             /*  build a new entity  */
-            let obj = this._models[type].build(build.attribute)
+            const obj = this._models[type].build(build.attribute)
 
             /*  check access to entity before action  */
             if (!(await this._authorized("before", "create", type, obj, ctx)))
                 throw new Error(`will not be allowed to create entity of type "${type}"`)
 
             /*  save new entity  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let err = await obj.save(opts).catch((err) => err)
+            const err = await obj.save(opts).catch((err) => err)
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))

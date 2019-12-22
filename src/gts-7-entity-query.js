@@ -29,8 +29,8 @@ import Bluebird   from "bluebird"
 export default class gtsEntityQuery {
     /*  calculate hash code of entity  */
     _hashCodeForEntity (info, type, obj) {
-        let fields = this._fieldsOfGraphQLType(info, type)
-        let data = Object.keys(fields.attribute)
+        const fields = this._fieldsOfGraphQLType(info, type)
+        const data = Object.keys(fields.attribute)
             .sort()
             .filter((name) => name !== this._hcname)
             .map((attribute) => JSON.stringify(obj[attribute]))
@@ -125,7 +125,7 @@ export default class gtsEntityQuery {
                 /*  MANY  */
 
                 /*  determine filter options  */
-                let opts = this._findManyOptions(target, args, info)
+                const opts = this._findManyOptions(target, args, info)
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
 
@@ -142,7 +142,7 @@ export default class gtsEntityQuery {
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${this._capitalize(relation)}`
+                    const getter = `get${this._capitalize(relation)}`
                     objs = await parent[getter](opts)
                 }
 
@@ -175,7 +175,7 @@ export default class gtsEntityQuery {
                 /*  ONE  */
 
                 /*  determine filter options  */
-                let opts = this._findOneOptions(target, args, info)
+                const opts = this._findOneOptions(target, args, info)
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
 
@@ -195,7 +195,7 @@ export default class gtsEntityQuery {
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${this._capitalize(relation)}`
+                    const getter = `get${this._capitalize(relation)}`
                     obj = await parent[getter](opts)
                 }
                 if (obj === null)
@@ -203,7 +203,7 @@ export default class gtsEntityQuery {
 
                 /*  check optional hash-code  */
                 if (args[this._hcname] !== undefined) {
-                    let hc = this._hashCodeForEntity(info, target, obj)
+                    const hc = this._hashCodeForEntity(info, target, obj)
                     if (hc !== args[this._hcname])
                         throw new Error(`entity ${target}#${obj[this._idname]} has hash-code ${hc} ` +
                             `(expected hash-code ${args[this._hcname]})`)
