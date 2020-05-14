@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -25,7 +25,7 @@
 /*  the mixin class  */
 export default class gtsVersion {
     version () {
-        return { major: 1, minor: 2, micro: 3, date: 20170415 }
+        return { major: 2, minor: 1, micro: 1, date: 20190202 }
     }
 }
 

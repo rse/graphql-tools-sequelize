@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -27,12 +27,12 @@ import Ducky from "ducky"
 
 /*  the mixin class  */
 export default class gtsUtilSequelizeOptions {
-    /*  GraphQL standard options to Sequelize findById() options conversion  */
+    /*  GraphQL standard options to Sequelize findByPk() options conversion  */
     _findOneOptions (entity, args, info) {
-        let opts = {}
+        const opts = {}
 
         /*  determine allowed fields  */
-        let allowed = this._fieldsOfGraphQLType(info, entity)
+        const allowed = this._fieldsOfGraphQLType(info, entity)
 
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
@@ -48,13 +48,22 @@ export default class gtsUtilSequelizeOptions {
             })
         }
 
+        /*  determine Sequelize "include" parameter  */
+        if (args.include !== undefined) {
+            if (typeof args.include !== "object")
+                throw new Error("invalid \"include\" argument (object expected)")
+            opts.include = args.include
+        }
+
         /*  determine Sequelize "attributes" parameter  */
-        let fieldInfo = this._graphqlRequestedFields(info)
-        let fields = Object.keys(fieldInfo)
-        let meth = fields.filter((field) => allowed.method[field])
-        let attr = fields.filter((field) => allowed.attribute[field])
-        let rels = fields.filter((field) => allowed.relation[field])
-        if (   meth.length === 0
+        const fieldInfo = this._graphqlRequestedFields(info)
+        const fields = Object.keys(fieldInfo)
+        const meth = fields.filter((field) => allowed.method[field])
+        const attr = fields.filter((field) => allowed.attribute[field])
+        const rels = fields.filter((field) => allowed.relation[field])
+        if (   args[this._hcname] === undefined
+            && fieldInfo[this._hcname] === undefined
+            && meth.length === 0
             && rels.length === 0
             && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,
@@ -64,7 +73,7 @@ export default class gtsUtilSequelizeOptions {
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
                 /*  special case of plain method calls (neither attribute nor relationship)  */
-                opts.attributes = [ "id" ]
+                opts.attributes = [ this._idname ]
             else
                 opts.attributes = attr
         }
@@ -74,10 +83,10 @@ export default class gtsUtilSequelizeOptions {
 
     /*  GraphQL standard options to Sequelize findAll() options conversion  */
     _findManyOptions (entity, args, info) {
-        let opts = {}
+        const opts = {}
 
         /*  determine allowed fields  */
-        let allowed = this._fieldsOfGraphQLType(info, entity)
+        const allowed = this._fieldsOfGraphQLType(info, entity)
 
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
@@ -108,13 +117,21 @@ export default class gtsUtilSequelizeOptions {
             opts.order = args.order
         }
 
+        /*  determine Sequelize "include" parameter  */
+        if (args.include !== undefined) {
+            if (typeof args.include !== "object")
+                throw new Error("invalid \"include\" argument (object expected)")
+            opts.include = args.include
+        }
+
         /*  determine Sequelize "attributes" parameter  */
-        let fieldInfo = this._graphqlRequestedFields(info)
-        let fields = Object.keys(fieldInfo)
-        let meth = fields.filter((field) => allowed.method[field])
-        let attr = fields.filter((field) => allowed.attribute[field])
-        let rels = fields.filter((field) => allowed.relation[field])
-        if (   meth.length === 0
+        const fieldInfo = this._graphqlRequestedFields(info)
+        const fields = Object.keys(fieldInfo)
+        const meth = fields.filter((field) => allowed.method[field])
+        const attr = fields.filter((field) => allowed.attribute[field])
+        const rels = fields.filter((field) => allowed.relation[field])
+        if (   fieldInfo[this._hcname] === undefined
+            && meth.length === 0
             && rels.length === 0
             && attr.filter((a) => !this._models[entity].rawAttributes[a]).length === 0) {
             /*  in case no relationships should be followed at all from this entity,
@@ -124,7 +141,7 @@ export default class gtsUtilSequelizeOptions {
                 would be "null" when dereferenced afterwards.  */
             if (attr.length === 0)
                 /*  should not happen as GraphQL does not allow an entirely empty selection  */
-                opts.attributes = [ "id" ]
+                opts.attributes = [ this._idname ]
             else
                 opts.attributes = attr
         }

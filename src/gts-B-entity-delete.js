@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -43,17 +43,23 @@ export default class gtsEntityDelete {
                 return new Error(`will not be allowed to delete entity of type "${type}"`)
 
             /*  delete the instance  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let result = entity.id
+            const result = entity[this._idname]
             await entity.destroy(opts)
 
             /*  update FTS index  */
             this._ftsUpdate(type, result, null, "delete")
 
             /*  trace access  */
-            await this._trace(type, result, null, "delete", "direct", "one", ctx)
+            await this._trace({
+                op:       "delete",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ result ],
+                dstAttrs: [ "*" ]
+            }, ctx)
 
             /*  return id of deleted entity  */
             return result

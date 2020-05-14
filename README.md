@@ -116,7 +116,8 @@ const definition = `
         ${gts.entityQuerySchema("Root", "", "Person*")}
     }
     type OrgUnit {
-        id: UUID!
+        ${gts.attrIdSchema("OrgUnit")}
+        ${gts.attrHcSchema("OrgUnit")}
         initials: String
         name: String
         director: Person
@@ -128,7 +129,8 @@ const definition = `
         ${gts.entityDeleteSchema("OrgUnit")}
     }
     type Person {
-        id: UUID!
+        ${gts.attrIdSchema("Person")}
+        ${gts.attrHcSchema("Person")}
         initials: String
         name: String
         belongsTo: OrgUnit
@@ -157,6 +159,8 @@ const resolvers = {
         Persons:    gts.entityQueryResolver ("Root", "", "Person*"),
     },
     OrgUnit: {
+        id:         gts.attrIdResolver      ("OrgUnit"),
+        hc:         gts.attrHcResolver      ("OrgUnit"),
         director:   gts.entityQueryResolver ("OrgUnit", "director",   "Person"),
         members:    gts.entityQueryResolver ("OrgUnit", "members",    "Person*"),
         parentUnit: gts.entityQueryResolver ("OrgUnit", "parentUnit", "OrgUnit"),
@@ -166,6 +170,8 @@ const resolvers = {
         delete:     gts.entityDeleteResolver("OrgUnit")
     },
     Person: {
+        id:         gts.attrIdResolver      ("Person"),
+        hc:         gts.attrHcResolver      ("Person"),
         belongsTo:  gts.entityQueryResolver ("Person", "belongsTo",  "OrgUnit"),
         supervisor: gts.entityQueryResolver ("Person", "supervisor", "Person"),
         clone:      gts.entityCloneResolver ("Person"),
@@ -274,7 +280,7 @@ Application Programming Interface (API)
 ---------------------------------------
 
 - `import GraphQLToolsSequelize from "graphql-tools-sequelize"`<br/>
-  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options: Object)`<br/>
+  `gts = new GraphQLToolsSequelize(sequelize: Sequelize, options?: Object)`<br/>
 
   Creates a new GraphQL-Tools-Sequelize instance with an existing Sequelize instance `sequelize`.
   The `options` have to given, but can be an empty object. It can contain the following
@@ -284,27 +290,77 @@ Application Programming Interface (API)
       Optionally validate entity object `obj` (of entity type `type`)
       just before create or update operations. If the resulting
       Promise is rejected, the create or update operation fails.
-      The `ctx` object is just passed through
-      from the `GraphQL.graphql()` call.
+      The `ctx` object is just passed through from the `GraphQL.graphql()` call.
 
     - `authorizer(moment: String, op: String, type: String, obj: Object, ctx: Object): Promise<Boolean>`:<br/>
       Optionally authorize entity object `obj` (of entity type `type`)
-      for operation `op` (`create`, `read`, `update` or `delete`) at `moment` (`before` or `after`). 
+      for operation `op` (`create`, `read`, `update` or `delete`) at `moment` (`before` or `after`).
 	  Notice that for `read` there is no `before` and for `delete` there is no `after`, of course. The `ctx` object is just passed through from
       the `GraphQL.graphql()` call. If the resulting Promise is rejected
       or returns `false`, the operation fails.
 
-    - `tracer(type: String, oid: String, obj: Object, op: String, via: String, onto: String, ctx: Object): Promise<any>`:<br/>
-      Optionally trace the operation `op` on entity object `obj` (which has object id `oid`).
+    - `tracer(record: Object, ctx: Object): Promise<any>`:<br/>
+      Optionally trace the operation via the action `record`. The fields of `record` are:
+      `{ op: String, arity: String, dstType: String, dstIds: String[], dstAttrs: String[] }`.
+      The `ctx` object is just passed through from the `GraphQL.graphql()` call.
 
     - `fts: { [String]: String[] }`:<br/>
       Enables the Full-Text-Search (FTS) mechanism for all configured entity types
       and their listed attributes.
 
+    - `idname: String = "id"`:<br/>
+      Configures the GraphQL name of the mandatory unique identifier attribute on each entity.
+      The default name is `id`.
+
+    - `idtype: String = "UUID"`:<br/>
+      Configures the GraphQL type of the mandatory unique identifier attribute on each entity.
+      The default type `UUID` assumes that you define the GraphQL scalar type `UUID` with the help of
+      [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
+
+    - `idmake: Function = () => (new UUID(1)).format()`:<br/>
+      Configures a function for generating unique identifiers for the mandatory unique identifier attribute on each entity.
+      The default uses [pure-uuid](https://github.com/rse/pure-uuid) to generate UUIDs of version 1.
+
+    - `hcname: String = "hc"`:<br/>
+      Configures the GraphQL name of the optional hash-code attribute on each entity.
+      The default name is `hc`. This attribute is NOT persisted and instead calculated on
+      the fly and is intended to be used for optimistic locking purposes.
+
+    - `hctype: String = "UUID"`:<br/>
+      Configures the GraphQL type of the optional hash-code attribute on each entity.
+      The default type `UUID` assumes that you define the GraphQL scalar type `UUID` with the help of
+      [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
+
+    - `hcmake: Function = (data) => (new UUID(5, "ns:URL", \`uri:gts:${data}\`)).format()`:<br/>
+      Configures a function for generating hash-codes for the optional hash-code attribute on each entity.
+      The default uses [pure-uuid](https://github.com/rse/pure-uuid) to generate UUIDs of version 5.
+
 - `gts.boot(): Promise`:<br/>
 
   Bootstrap the GraphQL-Tools-Sequelize instance. It internally
   mainly initialized the Full-Text-Search (FTS) mechanism.
+
+- `gts.attrIdSchema(source: String): String`,<br/>
+  `gts.attrIdResolver(source: String): Function`:<br/>
+
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for querying the mandatory unique identifier attribute
+  of an entity of type `source`. By default this generates a schema
+  entry `<idname>: <idtype>` and a resolver which just returns
+  `<object>[<idname>]`. This mandatory unique identifier attribute has
+  to be persisted and hence part of the Sequelize schema definition.
+
+- `gts.attrHcSchema(source: String): String`,<br/>
+  `gts.attrHcResolver(source: String): Function`:<br/>
+
+  Generate a GraphQL schema entry and a corresponding GraphQL resolver
+  function for querying the optional hash-code attribute of an
+  entity of type `source`. By default this generates a schema entry
+  `<hcname>: <hctype>` and a resolver which returns something like
+  `<hcmake>(data(<object>))`, where `data()` is an internal function
+  which deterministically concatenates the values of all attributes of
+  `<object>`. This optional hash-code attribute has NOT to be persisted
+  and hence SHOULD NOT BE part of the Sequelize schema definition.
 
 - `gts.entityQuerySchema(source: String, relation: String, target: String): String`,<br/>
   `gts.entityQueryResolver(source: String, relation: String, target: String): Function`:<br/>
@@ -322,20 +378,23 @@ Application Programming Interface (API)
     - empty `relation` and `target` cardinality 0..1:<br/>
 
         ```js
-        `# Query one [${target}]() entity by its unique id.\n` +
-        `${target}(id: String): ${target}\n`
+        `# Query one [${target}]() entity by its unique identifier (\`id\`) or condition (\`where\`) or` +
+        `# open an anonymous context for the [${target}]() entity.\n` +
+        `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+        `${target}(id: ${idtype}, where: JSON, include: JSON): ${target}\n`
         ```
 
     - empty `relation` and `target` cardinality 0..N:<br/>
 
         ```js
         `# Query one or many [${target}]() entities,\n` +
-        `# by either an (optionally available) full-text-search (\`query\`)\n` +
-        `# or an (always available) attribute-based condition (\`where\`),\n` +
-        `# optionally sort them (\`order\`),\n` +
-        `# optionally start the result set at the n-th entity (zero-based \`offset\`), and\n` +
-        `# optionally reduce the result set to a maximum number of entities (\`limit\`).\n` +
-        `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+        "# by either an (optionally available) full-text-search (`query`)\n" +
+        "# or an (always available) attribute-based condition (`where`),\n" +
+        "# optionally filter them by a condition on some relationships (`include`),\n" +
+        "# optionally sort them (`order`),\n" +
+        "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
+        "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
+        `${target}s(fts: String, where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
         ```
 
     - non-empty `relation` and `target` cardinality 0..1:<br/>
@@ -343,16 +402,22 @@ Application Programming Interface (API)
         ```js
         `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
         `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-        `${relation}(where: JSON): ${target}\n`
+        `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+        `${relation}(where: JSON, include: JSON): ${target}\n`
         ```
 
     - non-empty `relation` and `target` cardinality 0..N:<br/>
 
         ```js
-        `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
-        `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-        `${relation}(where: JSON): ${target}\n`
-        ```
+        `# Query one or many [${target}]() entities\n` +
+        `# by following the **${relation}** relation of [${source}]() entity,\n` +
+        "# optionally filter them by a condition (`where`),\n" +
+        "# optionally filter them by a condition on some relationships (`include`),\n" +
+        "# optionally sort them (`order`),\n" +
+        "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
+        "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
+        `${relation}(where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+       ```
 
   The comments are intentionally also generated, as they document
   the entries in the GraphQL schema and are visible through
@@ -369,8 +434,8 @@ Application Programming Interface (API)
     - For `entityCreate{Schema,Resolver}(type)`:<br/>
 
         ```js
-        `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-        `create(id: UUID, with: JSON): ${type}!\n`
+        `# Create new [${type}]() entity, optionally with specified attributes (\`with\`).\n` +
+        `create(id: ${idtype}, with: JSON): ${type}!\n`
         ```
 
     - For `entityClone{Schema,Resolver}(type)`:<br/>
@@ -391,7 +456,7 @@ Application Programming Interface (API)
 
         ```js
         `# Delete one [${type}]() entity.\n` +
-        `delete: UUID!\n`
+        `delete: ${idtype}!\n`
         ```
 
   The comments are intentionally also generated, as they document
@@ -401,11 +466,12 @@ Application Programming Interface (API)
 Assumptions
 -----------
 
-It is assumed that all your Sequelize entities have a field
-`id` which is the (technical) primary key of an entity. By
-default the type of field `id` is `UUID`, but this can be
-overridden. In case of the type `UUID`, it is assumed that
-you define the GraphQL scalar type `UUID` with the help of
+It is assumed that all your Sequelize entities have an attribute
+`id` (see also `idname` configuration option) which is the
+(technical) primary key of an entity. By default, the type of
+field `id` is `UUID`, but this can be overridden (see `idtype`
+configuration option). In case of the type `UUID`, it is assumed
+that you define the GraphQL scalar type `UUID` with the help of
 [GraphQL-Tools-Types](https://github.com/rse/graphql-tools-types).
 
 Notice: all entities are required to have the field `id` and the type
@@ -420,7 +486,7 @@ In addition, the scalar type `JSON` always has to be defined with the help of
 License
 -------
 
-Copyright (c) 2016-2017 Ralf S. Engelschall (http://engelschall.com/)
+Copyright (c) 2016-2019 Dr. Ralf S. Engelschall (http://engelschall.com/)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

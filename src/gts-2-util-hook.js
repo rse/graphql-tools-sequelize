@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -48,12 +48,12 @@ export default class gtsUtilHook {
     }
 
     /*   optionally provide tracing information  */
-    _trace (type, oid, obj, op, via, onto, ctx) {
+    _trace (record, ctx) {
         if (this._tracer === null)
             return Promise.resolve(true)
         let result
         try {
-            result = this._tracer.call(null, type, oid, obj, op, via, onto, ctx)
+            result = this._tracer.call(null, record, ctx)
         }
         catch (ex) {
             result = Promise.resolve(false)

@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -56,13 +56,13 @@ export default class gtsUtilGraphQL {
 
     /*  determine fields (and their type) of a GraphQL object type  */
     _fieldsOfGraphQLType (info, entity) {
-        let fields = { attribute: {}, relation: {}, method: {} }
-        let fieldsAll = info.schema._typeMap[entity]._fields
+        const fields = { attribute: {}, relation: {}, method: {} }
+        const fieldsAll = info.schema._typeMap[entity]._fields
         Object.keys(fieldsAll).forEach((field) => {
             let type = fieldsAll[field].type
             while (typeof type.ofType === "object")
                 type = type.ofType
-            if (field.match(/^(?:clone|create|update|delete)/))
+            if (field.match(/^(?:clone|create|update|delete)$/))
                 fields.method[field] = type.name
             else if (   type.constructor.name === "GraphQLScalarType"
                      || type.constructor.name === "GraphQLEnumType"  )
@@ -78,8 +78,8 @@ export default class gtsUtilGraphQL {
 
     /*  determine fields (and their type) of a GraphQL request  */
     _fieldsOfGraphQLRequest (args, info, entity) {
-        let defined = this._fieldsOfGraphQLType(info, entity)
-        let fields = { attribute: {}, relation: {} }
+        const defined = this._fieldsOfGraphQLType(info, entity)
+        const fields = { attribute: {}, relation: {} }
         if (typeof args.with === "object") {
             Object.keys(args.with).forEach((name) => {
                 if (defined.relation[name]) {
@@ -91,12 +91,12 @@ export default class gtsUtilGraphQL {
                     if (value === null)
                         value = { set: [] }
                     else {
-                        if (typeof value.set === "string")
-                            value.set = [ value.set ]
-                        if (typeof value.add === "string")
-                            value.add = [ value.add ]
-                        if (typeof value.del === "string")
-                            value.del = [ value.del ]
+                        if (value.set === null) value.set = []
+                        if (value.add === null) value.add = []
+                        if (value.del === null) value.del = []
+                        if (typeof value.set === "string") value.set = [ value.set ]
+                        if (typeof value.add === "string") value.add = [ value.add ]
+                        if (typeof value.del === "string") value.del = [ value.del ]
                         if (!Ducky.validate(value, "{ set?: [ string* ], add?: [ string+ ], del?: [ string+ ] }"))
                             throw new Error(`invalid value for relation "${name}" on type "${entity}"`)
                     }

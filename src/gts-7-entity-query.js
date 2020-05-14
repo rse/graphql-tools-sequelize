@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -24,15 +24,51 @@
 
 /*  external dependencies  */
 import Bluebird   from "bluebird"
-import capitalize from "capitalize"
 
 /*  the mixin class  */
 export default class gtsEntityQuery {
+    /*  calculate hash code of entity  */
+    _hashCodeForEntity (info, type, obj) {
+        const fields = this._fieldsOfGraphQLType(info, type)
+        const data = Object.keys(fields.attribute)
+            .sort()
+            .filter((name) => name !== this._hcname)
+            .map((attribute) => JSON.stringify(obj[attribute]))
+            .join(",")
+        return this._hcmake(data)
+    }
+
+    /*  API: query/read identifier and hash-code attributes  */
+    attrIdSchema (source) {
+        return "" +
+            `# the unique identifier of the [${source}]() entity.\n` +
+            `${this._idname}: ${this._idtype}!\n`
+    }
+    attrIdResolver (source) {
+        return (parent, args, ctx, info) => {
+            return parent[this._idname]
+        }
+    }
+    attrHcSchema (source) {
+        return "" +
+            `# the hash-code of the [${source}]() entity.\n` +
+            `${this._hcname}: ${this._hctype}!\n`
+    }
+    attrHcResolver (source) {
+        return (parent, args, ctx, info) => {
+            return this._hashCodeForEntity(info, source, parent)
+        }
+    }
+
     /*  API: query/read one or many entities (directly or via relation)  */
     entityQuerySchema (source, relation, target) {
+        let isMany = false
         let m
         if ((m = target.match(/^(.+)\*$/)) !== null) {
             target = m[1]
+            isMany = true
+        }
+        if (isMany) {
             /*  MANY  */
             if (relation === "")
                 /*  directly  */
@@ -40,34 +76,41 @@ export default class gtsEntityQuery {
                     `# Query one or many [${target}]() entities,\n` +
                     "# by either an (optionally available) full-text-search (`query`)\n" +
                     "# or an (always available) attribute-based condition (`where`),\n" +
+                    "# optionally filter them by a condition on some relationships (`include`),\n" +
                     "# optionally sort them (`order`),\n" +
                     "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
                     "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
-                    `${target}s(fts: String, where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+                    `${target}s(fts: String, where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one or many [${target}]() entities\n` +
                     `# by following the **${relation}** relation of [${source}]() entity,\n` +
                     "# optionally filter them by a condition (`where`),\n" +
+                    "# optionally filter them by a condition on some relationships (`include`),\n" +
                     "# optionally sort them (`order`),\n" +
                     "# optionally start the result set at the n-th entity (zero-based `offset`), and\n" +
                     "# optionally reduce the result set to a maximum number of entities (`limit`).\n" +
-                    `${relation}(where: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
+                    `${relation}(where: JSON, include: JSON, order: JSON, offset: Int = 0, limit: Int = 100): [${target}]!\n`
         }
         else {
             /*  ONE  */
             if (relation === "")
                 /*  directly  */
                 return "" +
-                    `# Query one [${target}]() entity by its unique id or open an anonymous context for [${target}].\n` +
-                    `${target}(id: ${this._idtype}): ${target}\n`
+                    `# Query one [${target}]() entity by its unique identifier (\`${this._idname}\`) or condition (\`where\`) or` +
+                    `# open an anonymous context for the [${target}]() entity.\n` +
+                    `# The [${target}]() entity can be optionally required to have a particular hash-code (\`${this._hcname}\`) for optimistic locking purposes.\n` +
+                    `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+                    `${target}(${this._idname}: ${this._idtype}, ${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
             else
                 /*  via relation  */
                 return "" +
                     `# Query one [${target}]() entity by following the **${relation}** relation of [${source}]() entity.\n` +
+                    `# The [${target}]() entity can be optionally required to have a particular hash-code (\`${this._hcname}\`) for optimistic locking purposes.\n` +
                     `# The [${target}]() entity can be optionally filtered by a condition (\`where\`).\n` +
-                    `${relation}(where: JSON): ${target}\n`
+                    `# The [${target}]() entity can be optionally filtered by a condition on some relationships (\`include\`).\n` +
+                    `${relation}(${this._hcname}: ${this._hctype}, where: JSON, include: JSON): ${target}\n`
         }
     }
     entityQueryResolver (source, relation, target) {
@@ -82,7 +125,7 @@ export default class gtsEntityQuery {
                 /*  MANY  */
 
                 /*  determine filter options  */
-                let opts = this._findManyOptions(target, args, info)
+                const opts = this._findManyOptions(target, args, info)
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
 
@@ -99,7 +142,7 @@ export default class gtsEntityQuery {
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${capitalize(relation)}`
+                    const getter = `get${this._capitalize(relation)}`
                     objs = await parent[getter](opts)
                 }
 
@@ -114,9 +157,17 @@ export default class gtsEntityQuery {
                 })
 
                 /*  trace access  */
-                await Bluebird.each(objs, (obj) => {
-                    return this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "many", ctx)
-                })
+                await this._trace(Object.assign({}, relation !== "" ? {
+                    srcType:  source,
+                    srcId:    parent[this._idname],
+                    srcAttr:  relation
+                } : {}, {
+                    op:       "read",
+                    arity:    "many",
+                    dstType:  target,
+                    dstIds:   objs.map((obj) => obj[this._idname]),
+                    dstAttrs: Object.keys(this._graphqlRequestedFields(info))
+                }), ctx)
 
                 return objs
             }
@@ -124,7 +175,7 @@ export default class gtsEntityQuery {
                 /*  ONE  */
 
                 /*  determine filter options  */
-                let opts = this._findOneOptions(target, args, info)
+                const opts = this._findOneOptions(target, args, info)
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
 
@@ -132,20 +183,31 @@ export default class gtsEntityQuery {
                 let obj
                 if (relation === "") {
                     /*  directly  */
-                    if (args.id === undefined)
+                    if (args[this._idname] !== undefined)
+                        /*  regular case: non-anonymous context, find by identifier  */
+                        obj = await this._models[target].findByPk(args[this._idname], opts)
+                    else if (args.where !== undefined)
+                        /*  regular case: non-anonymous context, find by condition  */
+                        obj = await this._models[target].findOne(opts)
+                    else
                         /*  special case: anonymous context  */
                         return new this._anonCtx(target)
-                    else
-                        /*  regular case: non-anonymous context  */
-                        obj = await this._models[target].findById(args.id, opts)
                 }
                 else {
                     /*  via relation  */
-                    let getter = `get${capitalize(relation)}`
+                    const getter = `get${this._capitalize(relation)}`
                     obj = await parent[getter](opts)
                 }
                 if (obj === null)
                     return null
+
+                /*  check optional hash-code  */
+                if (args[this._hcname] !== undefined) {
+                    const hc = this._hashCodeForEntity(info, target, obj)
+                    if (hc !== args[this._hcname])
+                        throw new Error(`entity ${target}#${obj[this._idname]} has hash-code ${hc} ` +
+                            `(expected hash-code ${args[this._hcname]})`)
+                }
 
                 /*  check authorization  */
                 if (!(await this._authorized("after", "read", target, obj, ctx)))
@@ -155,7 +217,17 @@ export default class gtsEntityQuery {
                 this._mapFieldValues(target, obj, ctx, info)
 
                 /*  trace access  */
-                await this._trace(target, obj.id, obj, "read", relation === "" ? "direct" : "relation", "one", ctx)
+                await this._trace(Object.assign({}, relation !== "" ? {
+                    srcType:  source,
+                    srcId:    parent[this._idname],
+                    srcAttr:  relation
+                } : {}, {
+                    op:       "read",
+                    arity:    "one",
+                    dstType:  target,
+                    dstIds:   [ obj[this._idname] ],
+                    dstAttrs: Object.keys(this._graphqlRequestedFields(info))
+                }), ctx)
 
                 return obj
             }

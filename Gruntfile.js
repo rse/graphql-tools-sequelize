@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -26,9 +26,7 @@
 module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-eslint")
     grunt.loadNpmTasks("grunt-babel")
-    grunt.loadNpmTasks("grunt-mocha-test")
     grunt.loadNpmTasks("grunt-contrib-clean")
-    grunt.loadNpmTasks("grunt-contrib-watch")
     grunt.initConfig({
         eslint: {
             options: {
@@ -49,50 +47,27 @@ module.exports = function (grunt) {
                 options: {
                     sourceMap: false,
                     presets: [
-                        [ "env", {
+                        [ "@babel/preset-env", {
                             "targets": {
-                                "node": 6.0
+                                "node": "8.0.0"
                             }
-                        } ],
-                        "es2016",
-                        "es2017",
-                        "stage-3",
-                        "stage-2"
+                        } ]
                     ],
                     plugins: [
-                        [ "transform-runtime", {
+                        [ "@babel/plugin-transform-runtime", {
+                            "corejs":      2,
                             "helpers":     true,
-                            "polyfill":    true,
-                            "regenerator": false,
-                            "moduleName": "babel-runtime"
+                            "regenerator": false
                         } ]
                     ]
                 }
             }
         },
-        mochaTest: {
-            "graphql-tools-sequelize": {
-                src: [ "tst/*.js", "!tst/common.js" ]
-            },
-            options: {
-                reporter: "spec",
-                require: "tst/common.js"
-            }
-        },
         clean: {
             clean: [ "lib" ],
             distclean: [ "node_modules" ]
-        },
-        watch: {
-            "src": {
-                files: [ "src/**/*.js", "tst/**/*.js" ],
-                tasks: [ "default" ],
-                options: {}
-            }
         }
     })
     grunt.registerTask("default", [ "eslint", "babel" ])
-    grunt.registerTask("test", [ "mochaTest" ])
-    grunt.registerTask("dev", [ "default", "watch" ])
 }
 

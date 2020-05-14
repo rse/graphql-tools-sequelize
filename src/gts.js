@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -57,8 +57,12 @@ class GraphQLToolsSequelize extends aggregation(
         super(sequelize, options)
         this._sequelize  = sequelize
         this._models     = sequelize.models
+        this._idname     = (typeof options.idname === "string"   ? options.idtype : "id")
         this._idtype     = (typeof options.idtype === "string"   ? options.idtype : "UUID")
         this._idmake     = (typeof options.idmake === "function" ? options.idmake : () => (new UUID(1)).format())
+        this._hcname     = (typeof options.hcname === "string"   ? options.hctype : "hc")
+        this._hctype     = (typeof options.hctype === "string"   ? options.hctype : "UUID")
+        this._hcmake     = (typeof options.hcmake === "function" ? options.hcmake : (data) => (new UUID(5, "ns:URL", `uri:gts:${data}`)).format())
         this._anonCtx    = function (type) { this.__$type$ = type }
         this._anonCtx.prototype.isType = function (type) { return this.__$type$ === type }
     }

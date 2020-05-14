@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -27,8 +27,8 @@ export default class gtsEntityCreate {
     /*  API: create a new entity  */
     entityCreateSchema (type) {
         return "" +
-            `# Create new [${type}]() entity, optionally with specified attributes (\`with\`)\n` +
-            `create(id: ${this._idtype}, with: JSON): ${type}!\n`
+            `# Create new [${type}]() entity, optionally with specified unique identifier (\`${this._idname}\`) and attributes (\`with\`).\n` +
+            `create(${this._idname}: ${this._idtype}, with: JSON): ${type}!\n`
     }
     entityCreateResolver (type) {
         return async (entity, args, ctx, info) => {
@@ -39,41 +39,42 @@ export default class gtsEntityCreate {
                 throw new Error(`method "create" only allowed in anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this._fieldsOfGraphQLType(info, type)
+            const defined = this._fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this._fieldsOfGraphQLRequest(args, info, type)
+            const build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  handle unique id  */
-            if (args.id === undefined)
+            if (args[this._idname] === undefined)
                 /*  auto-generate the id  */
-                build.attribute.id = this._idmake()
+                build.attribute[this._idname] = this._idmake()
             else {
                 /*  take over id, but ensure it is unique  */
-                build.attribute.id = args.id
-                let opts = {}
+                build.attribute[this._idname] = args[this._idname]
+                const opts = {}
                 if (ctx.tx !== undefined)
                     opts.transaction = ctx.tx
-                let existing = await this._models[type].findById(build.attribute.id, opts)
+                opts.attributes = [ this._idname ]
+                const existing = await this._models[type].findByPk(build.attribute[this._idname], opts)
                 if (existing !== null)
-                    throw new Error(`entity ${type}#${build.attribute.id} already exists`)
+                    throw new Error(`entity ${type}#${build.attribute[this._idname]} already exists`)
             }
 
             /*  validate attributes  */
-            await this._validate(type, build.attribute, ctx)
+            await this._validate(type, build, ctx)
 
             /*  build a new entity  */
-            let obj = this._models[type].build(build.attribute)
+            const obj = this._models[type].build(build.attribute)
 
             /*  check access to entity before action  */
             if (!(await this._authorized("before", "create", type, obj, ctx)))
                 throw new Error(`will not be allowed to create entity of type "${type}"`)
 
             /*  save new entity  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let err = await obj.save(opts).catch((err) => err)
+            const err = await obj.save(opts).catch((err) => err)
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))
@@ -88,16 +89,22 @@ export default class gtsEntityCreate {
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, obj, ctx)))
-                return null
+                throw new Error(`was not allowed to read (created) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, obj, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, obj.id, obj, "create")
+            this._ftsUpdate(type, obj[this._idname], obj, "create")
 
             /*  trace access  */
-            await this._trace(type, obj.id, obj, "create", "direct", "one", ctx)
+            await this._trace({
+                op:       "create",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ obj[this._idname] ],
+                dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
+            }, ctx)
 
             /*  return new entity  */
             return obj

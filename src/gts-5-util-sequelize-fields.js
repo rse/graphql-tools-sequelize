@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -22,22 +22,24 @@
 **  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*  external dependencies  */
-import capitalize from "capitalize"
-
 /*  the mixin class  */
 export default class gtsUtilSequelizeFields {
+    /*  capitalize the first letter of an identifier  */
+    _capitalize (id) {
+        return (id.substr(0, 1).toUpperCase() + id.substr(1))
+    }
+
     /*  update all relation fields of an entity  */
     async _entityUpdateFields (type, obj, def, upd, ctx, info) {
         /*  determine common Sequelize options  */
-        let opts = {}
+        const opts = {}
         if (ctx.tx !== undefined)
             opts.transaction = ctx.tx
 
         /*  iterate over all relationships...  */
-        let rels = Object.keys(upd)
+        const rels = Object.keys(upd)
         for (let i = 0; i < rels.length; i++) {
-            let name  = rels[i]
+            const name = rels[i]
 
             /*  determine target type and relationship cardinality  */
             let t = info.schema._typeMap[type]._fields[name].type
@@ -47,18 +49,18 @@ export default class gtsUtilSequelizeFields {
                     many = true
                 t = t.ofType
             }
-            let target = t.name
+            const target = t.name
 
             /*  helper method for changing a single relationship  */
             const changeRelation = async (prefix, ids) => {
                 /*  map all ids onto real ORM objects  */
-                let opts2 = Object.assign(opts, { where: { id: ids } })
-                let objs = await this._models[target].findAll(opts2)
+                const opts2 = Object.assign({}, opts, { where: { [ this._idname ]: ids } })
+                const objs = await this._models[target].findAll(opts2)
 
                 /*  sanity check requested ids  */
                 if (objs.length < ids.length) {
-                    let found = {}
-                    objs.forEach((obj) => { found[obj.id] = true })
+                    const found = {}
+                    objs.forEach((obj) => { found[obj[this._idname]] = true })
                     for (let j = 0; j < ids.length; j++)
                         if (!found[ids[j]])
                             throw new Error(`no such entity ${target}#${ids[j]} found`)
@@ -72,7 +74,7 @@ export default class gtsUtilSequelizeFields {
                 /*  change relationship  */
                 if (many) {
                     /*  change relationship of cardinality 0..N  */
-                    let method = `${prefix}${capitalize(name)}`
+                    const method = `${prefix}${this._capitalize(name)}`
                     if (typeof obj[method] !== "function")
                         throw new Error("relationship mutation method not found " +
                             `to ${prefix} relation ${name} on type ${type}`)
@@ -82,17 +84,17 @@ export default class gtsUtilSequelizeFields {
                     /*  change relationship of cardinality 0..1  */
                     if (prefix === "add")
                         prefix = "set"
-                    let method = `${prefix}${capitalize(name)}`
+                    const method = `${prefix}${this._capitalize(name)}`
                     if (typeof obj[method] !== "function")
                         throw new Error("relationship mutation method not found " +
                             `to ${prefix} relation ${name} on type ${type}`)
-                    let relObj = prefix !== "remove" ? (objs.length ? objs[0] : null) : null
+                    const relObj = prefix !== "remove" ? (objs.length ? objs[0] : null) : null
                     await obj[method](relObj, opts)
                 }
             }
 
             /*  determine relationship value and dispatch according to operation  */
-            let value = upd[name]
+            const value = upd[name]
             if (value.set) await changeRelation("set",    value.set)
             if (value.del) await changeRelation("remove", value.del)
             if (value.add) await changeRelation("add",    value.add)
@@ -104,7 +106,7 @@ export default class gtsUtilSequelizeFields {
         which return "undefined" for "null" values.  */
     _mapFieldValues (type, obj, ctx, info) {
         /*  determine allowed fields  */
-        let allowed = this._fieldsOfGraphQLType(info, type)
+        const allowed = this._fieldsOfGraphQLType(info, type)
 
         /*  iterate over all GraphQL attributes  */
         Object.keys(allowed.attribute).forEach((attribute) => {

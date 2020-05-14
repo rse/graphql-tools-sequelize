@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -39,30 +39,30 @@ export default class gtsEntityClone {
                 throw new Error(`method "clone" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this._fieldsOfGraphQLType(info, type)
+            const defined = this._fieldsOfGraphQLType(info, type)
 
             /*  check access to parent entity  */
             if (!(await this._authorized("after", "read", type, entity, ctx)))
                 throw new Error(`not allowed to read entity of type "${type}"`)
 
             /*  build a new entity  */
-            let data = {}
-            data.id = this._idmake()
+            const data = {}
+            data[this._idname] = this._idmake()
             Object.keys(defined.attribute).forEach((attr) => {
-                if (attr !== "id")
+                if (attr !== this._idname)
                     data[attr] = entity[attr]
             })
-            let obj = this._models[type].build(data)
+            const obj = this._models[type].build(data)
 
             /*  check access to entity before action  */
             if (!(await this._authorized("before", "create", type, obj, ctx)))
                 throw new Error(`will not be allowed to clone entity of type "${type}"`)
 
             /*  save new entity  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
-            let err = await obj.save(opts).catch((err) => err)
+            const err = await obj.save(opts).catch((err) => err)
             if (typeof err === "object" && err instanceof Error)
                 throw new Error("Sequelize: save: " + err.message + ":" +
                     err.errors.map((e) => e.message).join("; "))
@@ -73,16 +73,22 @@ export default class gtsEntityClone {
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, obj, ctx)))
-                return null
+                throw new Error(`was not allowed to read (cloned) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, obj, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, obj.id, obj, "create")
+            this._ftsUpdate(type, obj[this._idname], obj, "create")
 
             /*  trace access  */
-            await this._trace(type, obj.id, obj, "create", "direct", "one", ctx)
+            await this._trace({
+                op:       "create",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ obj[this._idname] ],
+                dstAttrs: Object.keys(data)
+            }, ctx)
 
             /*  return new entity  */
             return obj

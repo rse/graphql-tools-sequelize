@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -35,10 +35,10 @@ export default class gtsUtilFTS {
 
     /*  cherry-pick fields for FTS indexing  */
     _ftsObj2Doc (type, obj) {
-        let id = String(obj.id)
-        let doc = { id: id, __any: id }
+        const id = String(obj[this._idname])
+        const doc = { [ this._idname ]: id, __any: id }
         this._ftsCfg[type].forEach((field) => {
-            let val = String(obj[field])
+            const val = String(obj[field])
             doc[field] = val
             doc.__any += ` ${val}`
         })
@@ -52,23 +52,23 @@ export default class gtsUtilFTS {
             return
 
         /*  iterate over all entity types...  */
-        for (let type of Object.keys(this._ftsCfg)) {
+        for (const type of Object.keys(this._ftsCfg)) {
             /*  create a new in-memory index  */
             this._ftsIdx[type] = new elasticlunr.Index()
             this._ftsIdx[type].saveDocument(false)
-            this._ftsIdx[type].addField("id")
+            this._ftsIdx[type].addField(this._idname)
             this._ftsIdx[type].addField("__any")
             this._ftsCfg[type].forEach((field) => {
                 this._ftsIdx[type].addField(field)
             })
-            this._ftsIdx[type].setRef("id")
+            this._ftsIdx[type].setRef(this._idname)
 
             /*  iterate over all entity objects...  */
-            let opts = { attributes: this._ftsCfg[type].concat([ "id" ]) }
-            let objs = await this._models[type].findAll(opts)
+            const opts = { attributes: this._ftsCfg[type].concat([ this._idname ]) }
+            const objs = await this._models[type].findAll(opts)
             objs.forEach((obj) => {
                 /*  add entity objects to index  */
-                let doc = this._ftsObj2Doc(type, obj)
+                const doc = this._ftsObj2Doc(type, obj)
                 this._ftsIdx[type].addDoc(doc)
             })
         }
@@ -85,12 +85,12 @@ export default class gtsUtilFTS {
         /*  dispatch according to operation  */
         if (op === "create") {
             /*  add entity to index  */
-            let doc = this._ftsObj2Doc(type, obj)
+            const doc = this._ftsObj2Doc(type, obj)
             this._ftsIdx[type].addDoc(doc)
         }
         else if (op === "update") {
             /*  update entity in index  */
-            let doc = this._ftsObj2Doc(type, obj)
+            const doc = this._ftsObj2Doc(type, obj)
             this._ftsIdx[type].updateDoc(doc)
         }
         else if (op === "delete") {
@@ -108,9 +108,9 @@ export default class gtsUtilFTS {
             return new Error(`Full-Text-Search (FTS) not available for entity "${type}"`)
 
         /*  parse "[field:]keyword [field:]keyword [, ...]" query string  */
-        let queries = []
+        const queries = []
         query.split(/\s*,\s*/).forEach((query) => {
-            let fields = {}
+            const fields = {}
             query.split(/\s+/).forEach((field) => {
                 let fn = "__any"
                 let kw = field
@@ -129,14 +129,14 @@ export default class gtsUtilFTS {
         })
 
         /*  iterate over all queries...  */
-        let results1 = {}
+        const results1 = {}
         queries.forEach((query) => {
             /*   iterate over all fields...  */
-            let results2 = {}
+            const results2 = {}
             Object.keys(query).forEach((field) => {
                 /*  lookup entity ids from index for particular field  */
-                let kw = query[field].join(" ")
-                let config = {
+                const kw = query[field].join(" ")
+                const config = {
                     fields: {
                         [field]: {
                             boost:  1,
@@ -145,17 +145,17 @@ export default class gtsUtilFTS {
                         }
                     }
                 }
-                let results = this._ftsIdx[type].search(kw, config)
+                const results = this._ftsIdx[type].search(kw, config)
 
                 /*  reduce result list to set of unique ids  */
-                let results3 = {}
+                const results3 = {}
                 results.forEach((result) => {
-                    let oid = result.ref
+                    const oid = result.ref
                     results3[oid] = true
                 })
 
                 /*  AND-combine results with previous results  */
-                let oids = Object.keys(results2)
+                const oids = Object.keys(results2)
                 if (oids.length === 0)
                     Object.keys(results3).forEach((oid) => {
                         results2[oid] = true
@@ -175,7 +175,7 @@ export default class gtsUtilFTS {
         })
 
         /*  query entity objects from database  */
-        let opts = { where: { id: Object.keys(results1) } }
+        const opts = { where: { [this._idname]: Object.keys(results1) } }
         if (order  !== undefined) opts.order       = order
         if (offset !== undefined) opts.offset      = offset
         if (limit  !== undefined) opts.limit       = limit

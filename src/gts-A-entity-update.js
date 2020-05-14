@@ -1,6 +1,6 @@
 /*
 **  GraphQL-Tools-Sequelize -- Integration of GraphQL-Tools and Sequelize ORM
-**  Copyright (c) 2016-2017 Ralf S. Engelschall <rse@engelschall.com>
+**  Copyright (c) 2016-2019 Dr. Ralf S. Engelschall <rse@engelschall.com>
 **
 **  Permission is hereby granted, free of charge, to any person obtaining
 **  a copy of this software and associated documentation files (the
@@ -39,20 +39,20 @@ export default class gtsEntityUpdate {
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 
             /*  determine fields of entity as defined in GraphQL schema  */
-            let defined = this._fieldsOfGraphQLType(info, type)
+            const defined = this._fieldsOfGraphQLType(info, type)
 
             /*  determine fields of entity as requested in GraphQL request  */
-            let build = this._fieldsOfGraphQLRequest(args, info, type)
+            const build = this._fieldsOfGraphQLRequest(args, info, type)
 
             /*  check access to entity before action  */
             if (!(await this._authorized("before", "update", type, entity, ctx)))
                 throw new Error(`will not be allowed to update entity of type "${type}"`)
 
             /*  validate attributes  */
-            await this._validate(type, build.attribute, ctx)
+            await this._validate(type, build, ctx)
 
             /*  adjust the attributes according to the request  */
-            let opts = {}
+            const opts = {}
             if (ctx.tx !== undefined)
                 opts.transaction = ctx.tx
             await entity.update(build.attribute, opts)
@@ -67,16 +67,22 @@ export default class gtsEntityUpdate {
 
             /*  check access to entity again  */
             if (!(await this._authorized("after", "read", type, entity, ctx)))
-                return null
+                throw new Error(`was not allowed to read (updated) entity of type "${type}"`)
 
             /*  map field values  */
             this._mapFieldValues(type, entity, ctx, info)
 
             /*  update FTS index  */
-            this._ftsUpdate(type, entity.id, entity, "update")
+            this._ftsUpdate(type, entity[this._idname], entity, "update")
 
             /*  trace access  */
-            await this._trace(type, entity.id, entity, "update", "direct", "one", ctx)
+            await this._trace({
+                op:       "update",
+                arity:    "one",
+                dstType:  type,
+                dstIds:   [ entity[this._idname] ],
+                dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
+            }, ctx)
 
             /*  return updated entity  */
             return entity
