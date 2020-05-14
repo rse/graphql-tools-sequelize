@@ -28,7 +28,8 @@ import Sequelize             from "sequelize"
     dm.Person = db.define("Person", {
         id:         { type: Sequelize.UUID,        primaryKey: true  },
         initials:   { type: Sequelize.STRING(3),   allowNull:  false },
-        name:       { type: Sequelize.STRING(100), allowNull:  false }
+        name:       { type: Sequelize.STRING(100), allowNull:  false },
+        role:       { type: Sequelize.STRING(30),  allowNull:  true }
     })
     dm.OrgUnit.belongsTo(dm.OrgUnit, {
         as:         "parentUnit",
@@ -66,7 +67,7 @@ import Sequelize             from "sequelize"
     const pCGU = await dm.Person.create ({ id: uuid(), initials: "CGU", name: "Carol Gutzeit" })
     const pMWS = await dm.Person.create ({ id: uuid(), initials: "MWS", name: "Mark-W. Schmidt" })
     const pBWE = await dm.Person.create ({ id: uuid(), initials: "BWE", name: "Bernhard Weber" })
-    const pFST = await dm.Person.create ({ id: uuid(), initials: "FST", name: "Florian Stahl" })
+    const pFST = await dm.Person.create ({ id: uuid(), initials: "FST", name: "Florian Stahl", role: "employee" })
     await uMSG.setDirector(pHZ)
     await uMSG.setMembers([ pHZ, pJS ])
     await uXT.setDirector(pRSE)
@@ -135,12 +136,18 @@ import Sequelize             from "sequelize"
             ${gts.attrHcSchema("Person")}
             initials: String
             name: String
+            role: Role
             belongsTo: OrgUnit
             supervisor: Person
             ${gts.entityCloneSchema ("Person")}
             ${gts.entityCreateSchema("Person")}
             ${gts.entityUpdateSchema("Person")}
             ${gts.entityDeleteSchema("Person")}
+        }
+        enum Role {
+            principal
+            employee
+            assistant
         }
     `
 
@@ -168,6 +175,7 @@ import Sequelize             from "sequelize"
         Person: {
             id:         gts.attrIdResolver      ("Person"),
             hc:         gts.attrHcResolver      ("Person"),
+            role:       ({ role }) => role,
             belongsTo:  gts.entityQueryResolver ("Person", "belongsTo",  "OrgUnit"),
             supervisor: gts.entityQueryResolver ("Person", "supervisor", "Person"),
             clone:      gts.entityCloneResolver ("Person"),
@@ -227,8 +235,8 @@ import Sequelize             from "sequelize"
                 members    { id name }
             }
             u1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
-                update(with: { initials: "XXX" }) {
-                    id initials name
+                update(with: { initials: "XXX", role: "assistant" }) {
+                    id initials name role
                 }
             }
             c1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {

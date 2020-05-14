@@ -116,7 +116,7 @@ export default class gtsUtilGraphQL {
                         if (typeof value !== "string")
                             throw new Error("invalid value type (expected string) for " +
                                 `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
-                        if (type._enumConfig.values[value] === undefined)
+                        if (info.schema._typeMap[type]._values.find((enumValue) => { return enumValue.name === value }) === undefined)
                             throw new Error("invalid value for " +
                                 `enumeration "${type.name}" on field "${name}" on type "${entity}"`)
                     }
