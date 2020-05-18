@@ -36,7 +36,7 @@
         "grunt-contrib-clean":                       "2.0.0",
         "grunt-contrib-watch":                       "1.1.0",
         "grunt-babel":                               "8.0.0",
-        "grunt-eslint":                              "22.0.0",
+        "grunt-eslint":                              "23.0.0",
         "babel-eslint":                              "10.1.0",
         "eslint":                                    "7.0.0",
         "eslint-config-standard":                    "14.1.1",
