@@ -38,61 +38,66 @@ export default class gtsEntityClone {
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "clone" only allowed in non-anonymous ${type} context`)
 
-            /*  determine fields of entity as defined in GraphQL schema  */
-            const defined = this._fieldsOfGraphQLType(info, type)
-
-            /*  check access to parent entity  */
-            if (!(await this._authorized("after", "read", type, entity, ctx)))
-                throw new Error(`not allowed to read entity of type "${type}"`)
-
-            /*  build a new entity  */
-            const data = {}
-            data[this._idname] = this._idmake()
-            Object.keys(defined.attribute).forEach((attr) => {
-                if (attr !== this._idname)
-                    data[attr] = entity[attr]
-            })
-            const obj = this._models[type].build(data)
-
-            /*  check access to entity before action  */
-            if (!(await this._authorized("before", "create", type, obj, ctx)))
-                throw new Error(`will not be allowed to clone entity of type "${type}"`)
-
-            /*  save new entity  */
-            const opts = {}
-            if (ctx.tx !== undefined)
-                opts.transaction = ctx.tx
-            const err = await obj.save(opts).catch((err) => err)
-            if (typeof err === "object" && err instanceof Error)
-                throw new Error("Sequelize: save: " + err.message + ":" +
-                    err.errors.map((e) => e.message).join("; "))
-
-            /*  check access to entity after action  */
-            if (!(await this._authorized("after", "create", type, obj, ctx)))
-                throw new Error(`was not allowed to clone entity of type "${type}"`)
-
-            /*  check access to entity again  */
-            if (!(await this._authorized("after", "read", type, obj, ctx)))
-                throw new Error(`was not allowed to read (cloned) entity of type "${type}"`)
-
-            /*  map field values  */
-            this._mapFieldValues(type, obj, ctx, info)
-
-            /*  update FTS index  */
-            this._ftsUpdate(type, obj[this._idname], obj, "create")
-
-            /*  trace access  */
-            await this._trace({
-                op:       "create",
-                arity:    "one",
-                dstType:  type,
-                dstIds:   [ obj[this._idname] ],
-                dstAttrs: Object.keys(data)
-            }, ctx)
+            const obj = await this._entityClone(type, entity, args, ctx, info)
 
             /*  return new entity  */
             return obj
         }
+    }
+    async _entityClone (type, entity, args, ctx, info) {
+        /*  determine fields of entity as defined in GraphQL schema  */
+        const defined = this._fieldsOfGraphQLType(info, type)
+
+        /*  check access to parent entity  */
+        if (!(await this._authorized("after", "read", type, entity, ctx)))
+            throw new Error(`not allowed to read entity of type "${type}"`)
+
+        /*  build a new entity  */
+        const data = {}
+        data[this._idname] = this._idmake()
+        Object.keys(defined.attribute).forEach((attr) => {
+            if (attr !== this._idname)
+                data[attr] = entity[attr]
+        })
+        const obj = this._models[type].build(data)
+
+        /*  check access to entity before action  */
+        if (!(await this._authorized("before", "create", type, obj, ctx)))
+            throw new Error(`will not be allowed to clone entity of type "${type}"`)
+
+        /*  save new entity  */
+        const opts = {}
+        if (ctx.tx !== undefined)
+            opts.transaction = ctx.tx
+        const err = await obj.save(opts).catch((err) => err)
+        if (typeof err === "object" && err instanceof Error)
+            throw new Error("Sequelize: save: " + err.message + ":" +
+                err.errors.map((e) => e.message).join("; "))
+
+        /*  check access to entity after action  */
+        if (!(await this._authorized("after", "create", type, obj, ctx)))
+            throw new Error(`was not allowed to clone entity of type "${type}"`)
+
+        /*  check access to entity again  */
+        if (!(await this._authorized("after", "read", type, obj, ctx)))
+            throw new Error(`was not allowed to read (cloned) entity of type "${type}"`)
+
+        /*  map field values  */
+        this._mapFieldValues(type, obj, ctx, info)
+
+        /*  update FTS index  */
+        this._ftsUpdate(type, obj[this._idname], obj, "create")
+
+        /*  trace access  */
+        await this._trace({
+            op:       "create",
+            arity:    "one",
+            dstType:  type,
+            dstIds:   [ obj[this._idname] ],
+            dstAttrs: Object.keys(data)
+        }, ctx)
+
+        return obj
     }
 }
 

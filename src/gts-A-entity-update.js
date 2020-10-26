@@ -38,55 +38,59 @@ export default class gtsEntityUpdate {
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "update" only allowed in non-anonymous ${type} context`)
 
-            /*  determine fields of entity as defined in GraphQL schema  */
-            const defined = this._fieldsOfGraphQLType(info, type)
-
-            /*  determine fields of entity as requested in GraphQL request  */
-            const build = this._fieldsOfGraphQLRequest(args, info, type)
-
-            /*  check access to entity before action  */
-            if (!(await this._authorized("before", "update", type, entity, ctx)))
-                throw new Error(`will not be allowed to update entity of type "${type}"`)
-
-            /*  validate attributes  */
-            await this._validate(type, build, ctx)
-
-            /*  adjust the attributes according to the request  */
-            const opts = {}
-            if (ctx.tx !== undefined)
-                opts.transaction = ctx.tx
-            await entity.update(build.attribute, opts)
-
-            /*  adjust the relationships according to the request  */
-            await this._entityUpdateFields(type, entity,
-                defined.relation, build.relation, ctx, info)
-
-            /*  check access to entity after action  */
-            if (!(await this._authorized("after", "update", type, entity, ctx)))
-                throw new Error(`was not allowed to update entity of type "${type}"`)
-
-            /*  check access to entity again  */
-            if (!(await this._authorized("after", "read", type, entity, ctx)))
-                throw new Error(`was not allowed to read (updated) entity of type "${type}"`)
-
-            /*  map field values  */
-            this._mapFieldValues(type, entity, ctx, info)
-
-            /*  update FTS index  */
-            this._ftsUpdate(type, entity[this._idname], entity, "update")
-
-            /*  trace access  */
-            await this._trace({
-                op:       "update",
-                arity:    "one",
-                dstType:  type,
-                dstIds:   [ entity[this._idname] ],
-                dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
-            }, ctx)
+            await this._entityUpdate(type, entity, args, ctx, info)
 
             /*  return updated entity  */
             return entity
         }
+    }
+    /*  argument args must be of type object and have attribute 'with'  */
+    async _entityUpdate (type, entity, args, ctx, info) {
+        /*  determine fields of entity as defined in GraphQL schema  */
+        const defined = this._fieldsOfGraphQLType(info, type)
+
+        /*  determine fields of entity as requested in GraphQL request  */
+        const build = this._fieldsOfGraphQLRequest(args, info, type)
+
+        /*  check access to entity before action  */
+        if (!(await this._authorized("before", "update", type, entity, ctx)))
+            throw new Error(`will not be allowed to update entity of type "${type}"`)
+
+        /*  validate attributes  */
+        await this._validate(type, build, ctx)
+
+        /*  adjust the attributes according to the request  */
+        const opts = {}
+        if (ctx.tx !== undefined)
+            opts.transaction = ctx.tx
+        await entity.update(build.attribute, opts)
+
+        /*  adjust the relationships according to the request  */
+        await this._entityUpdateFields(type, entity,
+            defined.relation, build.relation, ctx, info)
+
+        /*  check access to entity after action  */
+        if (!(await this._authorized("after", "update", type, entity, ctx)))
+            throw new Error(`was not allowed to update entity of type "${type}"`)
+
+        /*  check access to entity again  */
+        if (!(await this._authorized("after", "read", type, entity, ctx)))
+            throw new Error(`was not allowed to read (updated) entity of type "${type}"`)
+
+        /*  map field values  */
+        this._mapFieldValues(type, entity, ctx, info)
+
+        /*  update FTS index  */
+        this._ftsUpdate(type, entity[this._idname], entity, "update")
+
+        /*  trace access  */
+        await this._trace({
+            op:       "update",
+            arity:    "one",
+            dstType:  type,
+            dstIds:   [ entity[this._idname] ],
+            dstAttrs: Object.keys(build.attribute).concat(Object.keys(build.relation))
+        }, ctx)
     }
 }
 

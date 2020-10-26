@@ -38,32 +38,38 @@ export default class gtsEntityDelete {
             if (typeof entity === "object" && entity instanceof this._anonCtx && entity.isType(type))
                 throw new Error(`method "delete" only allowed in non-anonymous ${type} context`)
 
-            /*  check access to target before action  */
-            if (!(await this._authorized("before", "delete", type, entity, ctx)))
-                return new Error(`will not be allowed to delete entity of type "${type}"`)
-
-            /*  delete the instance  */
-            const opts = {}
-            if (ctx.tx !== undefined)
-                opts.transaction = ctx.tx
-            const result = entity[this._idname]
-            await entity.destroy(opts)
-
-            /*  update FTS index  */
-            this._ftsUpdate(type, result, null, "delete")
-
-            /*  trace access  */
-            await this._trace({
-                op:       "delete",
-                arity:    "one",
-                dstType:  type,
-                dstIds:   [ result ],
-                dstAttrs: [ "*" ]
-            }, ctx)
+            const result = await this._entityDelete(type, entity, args, ctx, info)
 
             /*  return id of deleted entity  */
             return result
         }
+    }
+    async _entityDelete (type, entity, args, ctx) {
+        /*  check access to target before action  */
+        if (!(await this._authorized("before", "delete", type, entity, ctx)))
+            return new Error(`will not be allowed to delete entity of type "${type}"`)
+
+        /*  delete the instance  */
+        const opts = {}
+        if (ctx.tx !== undefined)
+            opts.transaction = ctx.tx
+        const result = entity[this._idname]
+        await entity.destroy(opts)
+
+        /*  update FTS index  */
+        this._ftsUpdate(type, result, null, "delete")
+
+        /*  trace access  */
+        await this._trace({
+            op:       "delete",
+            arity:    "one",
+            dstType:  type,
+            dstIds:   [ result ],
+            dstAttrs: [ "*" ]
+        }, ctx)
+
+        /*  return id of deleted entity  */
+        return result
     }
 }
 

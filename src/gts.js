@@ -38,6 +38,7 @@ import gtsEntityCreate         from "./gts-8-entity-create"
 import gtsEntityClone          from "./gts-9-entity-clone"
 import gtsEntityUpdate         from "./gts-A-entity-update"
 import gtsEntityDelete         from "./gts-B-entity-delete"
+import gtsEntityBatch         from "./gts-C-entity-batch"
 
 /*  the API class  */
 class GraphQLToolsSequelize extends aggregation(
@@ -51,7 +52,8 @@ class GraphQLToolsSequelize extends aggregation(
     gtsEntityCreate,
     gtsEntityClone,
     gtsEntityUpdate,
-    gtsEntityDelete
+    gtsEntityDelete,
+    gtsEntityBatch
 ) {
     constructor (sequelize, options = {}) {
         super(sequelize, options)
