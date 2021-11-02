@@ -30,7 +30,7 @@ module.exports = function (grunt) {
     grunt.initConfig({
         eslint: {
             options: {
-                configFile: "eslint.yaml"
+                overrideConfigFile: "eslint.yaml"
             },
             "graphql-tools-sequelize": [ "src/**/*.js", "tst/**/*.js" ]
         },
