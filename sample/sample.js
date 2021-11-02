@@ -1,7 +1,7 @@
 
 import UUID                  from "pure-uuid"
 import * as GraphQL          from "graphql"
-import * as GraphQLTools     from "graphql-tools"
+import * as GraphQLTools     from "@graphql-tools/schema"
 import GraphQLToolsSequelize from "graphql-tools-sequelize"
 import GraphQLToolsTypes     from "graphql-tools-types"
 import HAPI                  from "hapi"
