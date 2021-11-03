@@ -130,6 +130,7 @@ import Sequelize             from "sequelize"
             ${gts.entityCreateSchema("OrgUnit")}
             ${gts.entityUpdateSchema("OrgUnit")}
             ${gts.entityDeleteSchema("OrgUnit")}
+            ${gts.entityBatchSchema("OrgUnit")}
         }
         type Person {
             ${gts.attrIdSchema("Person")}
@@ -143,6 +144,7 @@ import Sequelize             from "sequelize"
             ${gts.entityCreateSchema("Person")}
             ${gts.entityUpdateSchema("Person")}
             ${gts.entityDeleteSchema("Person")}
+            ${gts.entityBatchSchema("Person")}
         }
         enum Role {
             principal
@@ -170,7 +172,8 @@ import Sequelize             from "sequelize"
             clone:      gts.entityCloneResolver ("OrgUnit"),
             create:     gts.entityCreateResolver("OrgUnit"),
             update:     gts.entityUpdateResolver("OrgUnit"),
-            delete:     gts.entityDeleteResolver("OrgUnit")
+            delete:     gts.entityDeleteResolver("OrgUnit"),
+            batch:      gts.entityBatchResolver("OrgUnit")
         },
         Person: {
             id:         gts.attrIdResolver      ("Person"),
@@ -181,7 +184,8 @@ import Sequelize             from "sequelize"
             clone:      gts.entityCloneResolver ("Person"),
             create:     gts.entityCreateResolver("Person"),
             update:     gts.entityUpdateResolver("Person"),
-            delete:     gts.entityDeleteResolver("Person")
+            delete:     gts.entityDeleteResolver("Person"),
+            batch:      gts.entityBatchResolver("Person")
         }
     }
 
@@ -220,6 +224,7 @@ import Sequelize             from "sequelize"
                         name: "CoC Web Technologies",
                         parentUnit: "${uXT.id}",
                         director: "acf34c80-9f83-11e6-8d46-080027e303e4"
+                        members: "acf34c80-9f83-11e6-8d46-080027e303e4"
                     }
                 ) {
                     id initials name
@@ -234,6 +239,13 @@ import Sequelize             from "sequelize"
                 parentUnit { id name }
                 members    { id name }
             }
+            q2: Person(where: {
+                id: "acf34c80-9f83-11e6-8d46-080027e303e4"
+            }) {
+                id
+                name
+                belongsTo    { id name }
+            }
             u1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
                 update(with: { initials: "XXX", role: "assistant" }) {
                     id initials name role
@@ -243,6 +255,154 @@ import Sequelize             from "sequelize"
                 clone {
                     id initials name
                 }
+            }
+            b1: OrgUnit {
+                batch (
+                    collection: [ {
+                        op: "CLONE",
+                        type: "OrgUnit",
+                        id: "acf34c80-9f83-11e6-8d47-080027e303e4"
+                    } ]
+                ) { id }
+            }
+            b2: OrgUnit {
+                batch (
+                    collection: [ {
+                        op: "CREATE",
+                        type: "OrgUnit",
+                        ref: "$orgId",
+                        id: "48a44b20-f363-11ea-a870-d322e0e3adb0"
+                        with: {
+                            initials: "CoC-UX",
+                            name: "CoC User Experience",
+                            parentUnit: "${uXT.id}",
+                            director: "acf34c80-9f83-11e6-8d46-080027e303e4"
+                        }
+                    }, {
+                        op: "CREATE",
+                        type: "Person", 
+                        id: "2e1579e0-f364-11ea-9e92-8bbb944fc462"
+                        with: {
+                            initials: "LZE",
+                            name: "Linda Zeman",
+                            supervisor: "${pRSE.id}",
+                            belongsTo: "$orgId"
+                        }
+                    }, {
+                        op: "CREATE",
+                        type: "Person",
+                        id: "1a74d8e0-f350-11ea-bede-335547113b7d"
+                        with: {
+                            initials: "TSC",
+                            name: "Thomas Schöpf",
+                            supervisor: "${pRSE.id}",
+                            belongsTo: "$orgId"
+                        }
+                    }, {
+                        op: "CREATE",
+                        type: "Person",
+                        with: {
+                            initials: "EWA",
+                            name: "Erwin Wacha",
+                            supervisor: "${pRSE.id}",
+                            belongsTo: "$orgId"
+                        }
+                    }  ]
+                ) {
+                    id initials name parentUnit { id name } director { id name } members { id name }
+                }
+            }
+            b3: OrgUnit {
+                batch (
+                    collection: [ {
+                        op: "UPDATE",
+                        type: "OrgUnit", 
+                        id: "acf34c80-9f83-11e6-8d47-080027e303e4",
+                        with: {
+                            initials: "CoC-WT2",
+                            name: "CoC Web Technologies 2"
+                        }
+                    }, {
+                        op: "UPDATE",
+                        type: "OrgUnit",
+                        id: "48a44b20-f363-11ea-a870-d322e0e3adb0",
+                        root: true,
+                        with: {
+                            initials: "CoC-UX 2",
+                            name: "CoC User Experience 2"
+                        }
+                    } ]
+                ) { id initials name }
+            }
+            b4: OrgUnit(id: "48a44b20-f363-11ea-a870-d322e0e3adb0") {
+                batch (
+                    collection: [ {
+                        op: "UPDATE",
+                        type: "OrgUnit",
+                        id: "48a44b20-f363-11ea-a870-d322e0e3adb0",
+                        with: {
+                            id: "48a44b20-f363-11ea-a870-d322e0e3adb0",
+                            initials: "CoC-AA",
+                            name: "CoC Application Architecture",
+                        }
+                    }, {
+                        op: "CREATE",
+                        type: "Person",
+                        with: {
+                            initials: "LSC",
+                            name: "Lisa Schötz",
+                            supervisor: "${pRSE.id}",
+                            belongsTo: "48a44b20-f363-11ea-a870-d322e0e3adb0"
+                        }
+                    }, {
+                        op: "UPDATE",
+                        type: "Person",
+                        id: "2e1579e0-f364-11ea-9e92-8bbb944fc462",
+                        with: { name: "Linda Elisabeth Zeman" }
+                    }, {
+                        op: "DELETE",
+                        type: "Person",
+                        id: "1a74d8e0-f350-11ea-bede-335547113b7d"
+                    }  ]
+                ) {
+                    id initials name members { id name }
+                }
+            }
+            b5: OrgUnit {
+                batch (
+                    collection: [ {
+                        op: "UPDATE",
+                        type: "Person",
+                        id: "2e1579e0-f364-11ea-9e92-8bbb944fc462",
+                        with: { initials: "LTU" }
+                    } ]
+                ) { id }
+            }
+            b6: OrgUnit(id: "48a44b20-f363-11ea-a870-d322e0e3adb0") {
+                batch (
+                    collection: [ {
+                        op: "UPDATE",
+                        type: "Person",
+                        id: "2e1579e0-f364-11ea-9e92-8bbb944fc462",
+                        with: { name: "Linda Elisabeth Turke" }
+                    } ]
+                ) {
+                    id initials name members { id name }
+                }
+            }
+            b7: OrgUnit {
+                batch (
+                    collection: [ {
+                        op: "DELETE",
+                        type: "OrgUnit",
+                        id: "acf34c80-9f83-11e6-8d47-080027e303e4"
+                    }, {
+                        op: "DELETE",
+                        type: "OrgUnit",
+                        id: "48a44b20-f363-11ea-a870-d322e0e3adb0",
+                        root: true
+                    } ]
+                ) { id }
             }
             d1: Person(id: "acf34c80-9f83-11e6-8d46-080027e303e4") {
                 delete
