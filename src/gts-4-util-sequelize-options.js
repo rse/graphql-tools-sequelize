@@ -38,7 +38,7 @@ export default class gtsUtilSequelizeOptions {
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
                 throw new Error("invalid \"where\" argument (object expected)")
-            opts.where = args.where
+            opts.where = {}
             Object.keys(args.where).forEach((field) => {
                 if (!allowed.attribute[field])
                     throw new Error("invalid \"where\" argument: " +
@@ -91,7 +91,7 @@ export default class gtsUtilSequelizeOptions {
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
                 throw new Error("invalid \"where\" argument (object expected)")
-            opts.where = args.where
+            opts.where = {}
             Object.keys(args.where).forEach((field) => {
                 if (!allowed.attribute[field])
                     throw new Error("invalid \"where\" argument: " +
