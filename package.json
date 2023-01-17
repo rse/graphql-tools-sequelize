@@ -28,24 +28,24 @@
         "elasticlunr":                               "0.9.5",
         "pure-uuid":                                 "1.6.2",
         "aggregation":                               "1.2.7",
-        "@babel/runtime-corejs2":                    "7.16.0"
+        "@babel/runtime-corejs2":                    "7.20.7"
     },
     "devDependencies": {
-        "grunt":                                     "1.4.1",
+        "grunt":                                     "1.5.3",
         "grunt-cli":                                 "1.4.3",
-        "grunt-contrib-clean":                       "2.0.0",
+        "grunt-contrib-clean":                       "2.0.1",
         "grunt-contrib-watch":                       "1.1.0",
         "grunt-babel":                               "8.0.0",
-        "grunt-eslint":                              "24.0.0",
+        "grunt-eslint":                              "24.0.1",
         "babel-eslint":                              "10.1.0",
-        "eslint":                                    "7.32.0",
-        "eslint-config-standard":                    "14.1.1",
-        "eslint-plugin-promise":                     "5.1.1",
-        "eslint-plugin-import":                      "2.25.2",
+        "eslint":                                    "8.32.0",
+        "eslint-config-standard":                    "17.0.0",
+        "eslint-plugin-promise":                     "6.1.1",
+        "eslint-plugin-import":                      "2.27.5",
         "eslint-plugin-node":                        "11.1.0",
-        "@babel/core":                               "7.16.0",
-        "@babel/preset-env":                         "7.16.0",
-        "@babel/plugin-transform-runtime":           "7.16.0"
+        "@babel/core":                               "7.20.12",
+        "@babel/preset-env":                         "7.20.2",
+        "@babel/plugin-transform-runtime":           "7.19.6"
     },
     "engines": {
         "node":                                      ">=8.0.0"
