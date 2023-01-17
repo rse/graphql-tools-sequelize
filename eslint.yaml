@@ -34,8 +34,6 @@ parserOptions:
     ecmaFeatures:
         jsx:     false
 
-parser: babel-eslint
-
 env:
     browser:       true
     node:          false
@@ -65,4 +63,5 @@ rules:
     array-bracket-spacing:               off
     lines-between-class-members:         off
     computed-property-spacing:           off
+    multiline-ternary:                   off
 
