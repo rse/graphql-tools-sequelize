@@ -27,6 +27,62 @@ import Ducky from "ducky"
 
 /*  the mixin class  */
 export default class gtsUtilSequelizeOptions {
+    /*  determine Sequelize operators  */
+    _sequelizeOpMap () {
+        const map = {}
+        const symbols = this._sequelize.queryInterface.queryGenerator.OperatorMap
+        for (const symbol of Object.getOwnPropertySymbols(symbols))
+            map[symbol.description] = symbol
+        return map
+    }
+
+    /*  build Sequelize "where" parameter  */
+    _buildWhere (entity, src, allowed, opMap) {
+        /*  pass-through non-object sources (end of recursion)  */
+        if (typeof src !== "object")
+            return src
+
+        /*  build destination parameter  */
+        let dst
+        if (src instanceof Array) {
+            dst = []
+            for (const value of src)
+                dst.push(this._buildWhere(entity, value, allowed, opMap))  /*  RECURSION  */
+        }
+        else {
+            dst = {}
+            for (const key of Object.keys(src)) {
+                if (opMap[key] !== undefined)
+                    dst[opMap[key]] = this._buildWhere(entity, src[key], allowed, opMap)
+                else if (allowed.attribute[key])
+                    dst[key] = this._buildWhere(entity, src[key], allowed, opMap)
+                else
+                    throw new Error(`invalid "where" argument: no such field "${key}" on type "${entity}"`)
+            }
+        }
+        return dst
+    }
+
+    /*  build Sequelize "include" parameter  */
+    _buildInclude (entity, src, allowed, opMap) {
+        /*  sanity check source  */
+        if (src instanceof Array)
+            throw new Error("invalid \"include\" argument (object expected)")
+
+        /*  build destination parameter  */
+        const dst = []
+        for (const key of Object.keys(src)) {
+            if (allowed.relation[key] === undefined)
+                throw new Error(`invalid "include" argument: no such relation "${key}" on type "${entity}"`)
+            dst.push({
+                model: this._models[allowed.relation[key]],
+                as:    key,
+                where: this._buildWhere(entity, src[key], allowed, opMap)
+            })
+        }
+        return dst
+    }
+
     /*  GraphQL standard options to Sequelize findByPk() options conversion  */
     _findOneOptions (entity, args, info) {
         const opts = {}
@@ -34,24 +90,21 @@ export default class gtsUtilSequelizeOptions {
         /*  determine allowed fields  */
         const allowed = this._fieldsOfGraphQLType(info, entity)
 
+        /*  determine Sequelize operator map  */
+        const opMap = this._sequelizeOpMap()
+
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
                 throw new Error("invalid \"where\" argument (object expected)")
-            opts.where = {}
-            Object.keys(args.where).forEach((field) => {
-                if (!allowed.attribute[field])
-                    throw new Error("invalid \"where\" argument: " +
-                        `no such field "${field}" on type "${entity}"`)
-                opts.where[field] = args.where[field]
-            })
+            opts.where = this._buildWhere(entity, args.where, allowed, opMap)
         }
 
         /*  determine Sequelize "include" parameter  */
         if (args.include !== undefined) {
             if (typeof args.include !== "object")
                 throw new Error("invalid \"include\" argument (object expected)")
-            opts.include = args.include
+            opts.include = this._buildInclude(entity, args.include, allowed, opMap)
         }
 
         /*  determine Sequelize "attributes" parameter  */
@@ -87,17 +140,14 @@ export default class gtsUtilSequelizeOptions {
         /*  determine allowed fields  */
         const allowed = this._fieldsOfGraphQLType(info, entity)
 
+        /*  determine Sequelize operator map  */
+        const opMap = this._sequelizeOpMap()
+
         /*  determine Sequelize "where" parameter  */
         if (args.where !== undefined) {
             if (typeof args.where !== "object")
                 throw new Error("invalid \"where\" argument (object expected)")
-            opts.where = {}
-            Object.keys(args.where).forEach((field) => {
-                if (!allowed.attribute[field])
-                    throw new Error("invalid \"where\" argument: " +
-                        `no such field "${field}" on type "${entity}"`)
-                opts.where[field] = args.where[field]
-            })
+            opts.where = this._buildWhere(entity, args.where, allowed, opMap)
         }
 
         /*  determine Sequelize "offset" parameter  */
@@ -119,7 +169,7 @@ export default class gtsUtilSequelizeOptions {
         if (args.include !== undefined) {
             if (typeof args.include !== "object")
                 throw new Error("invalid \"include\" argument (object expected)")
-            opts.include = args.include
+            opts.include = this._buildInclude(entity, args.include, allowed, opMap)
         }
 
         /*  determine Sequelize "attributes" parameter  */
